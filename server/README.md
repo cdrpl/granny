@@ -1,6 +1,6 @@
 # Server
 
-This is the game server. It handles the realtime backend functionality.
+The server handles realtime functionality and network communication is achieved through WebSockets.
 
 ### Dependencies
 
