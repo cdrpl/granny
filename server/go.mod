@@ -1,4 +1,4 @@
-module github.com/cdrpl/idlemon
+module github.com/cdrpl/granny/server
 
 go 1.15
 

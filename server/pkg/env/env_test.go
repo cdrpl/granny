@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/cdrpl/idlemon/pkg/env"
+	. "github.com/cdrpl/granny/server/pkg/env"
 )
 
 func TestParseEnvFile(t *testing.T) {

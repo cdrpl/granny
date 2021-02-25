@@ -3,7 +3,7 @@ package validate_test
 import (
 	"testing"
 
-	. "github.com/cdrpl/idlemon/pkg/validate"
+	. "github.com/cdrpl/granny/server/pkg/validate"
 )
 
 func createValidatorWithErrors(errMsg string) Validator {

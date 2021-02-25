@@ -7,7 +7,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/cdrpl/idlemon/pkg/ws"
+	"github.com/cdrpl/granny/server/pkg/ws"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

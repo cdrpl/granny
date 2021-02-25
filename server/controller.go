@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cdrpl/idlemon/pkg/validate"
+	"github.com/cdrpl/granny/server/pkg/validate"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4"

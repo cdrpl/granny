@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cdrpl/idlemon/pkg/env"
-	"github.com/cdrpl/idlemon/pkg/game"
-	"github.com/cdrpl/idlemon/pkg/ws"
+	"github.com/cdrpl/granny/server/pkg/env"
+	"github.com/cdrpl/granny/server/pkg/game"
+	"github.com/cdrpl/granny/server/pkg/ws"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
