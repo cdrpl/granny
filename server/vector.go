@@ -10,25 +10,10 @@ type Vector struct {
 	Y float64 `json:"y"`
 }
 
-// MoveTowards will move the vector towards the destination.
-func (v *Vector) MoveTowards(dest Vector, speed float64) {
-	dir := direction(*v, dest)
-	dir = normalize(dir)
-	dir = mult(dir, speed)
-
-	dist := distance(*v, dest)
-
-	if dist <= magnitude(dir) {
-		*v = dest
-	} else {
-		v.add(dir)
-	}
-}
-
-// Return the distance between two vectors.
-func distance(v1, v2 Vector) float64 {
-	x := math.Pow(v1.X-v2.X, 2)
-	y := math.Pow(v1.Y-v2.Y, 2)
+// Return the distance from the given vector.
+func (v Vector) distance(v2 Vector) float64 {
+	x := math.Pow(v.X-v2.X, 2)
+	y := math.Pow(v.Y-v2.Y, 2)
 	dist := math.Sqrt(x + y)
 	return math.Abs(dist)
 }
@@ -39,15 +24,14 @@ func (v *Vector) add(vB Vector) {
 	v.Y += vB.Y
 }
 
-// Multiply a vector by the given value
-func mult(v Vector, val float64) Vector {
+// Multiply the vector by the given value.
+func (v *Vector) mult(val float64) {
 	v.X *= val
 	v.Y *= val
-	return v
 }
 
-// Return the magnitude of the given vector
-func magnitude(v Vector) float64 {
+// Return the magnitude of the vector.
+func (v Vector) magnitude() float64 {
 	x := v.X * v.X
 	y := v.Y * v.Y
 	return math.Sqrt(x + y)
@@ -62,7 +46,7 @@ func direction(pos, dest Vector) (v Vector) {
 
 // Return the normalized vector
 func normalize(v Vector) Vector {
-	mag := magnitude(v)
+	mag := v.magnitude()
 
 	if mag == 0 {
 		return Vector{} // zeroed out vector

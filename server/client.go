@@ -61,22 +61,8 @@ func (c *Client) ReadPump(server *Server) {
 			break
 		}
 
-		// parse message
-		message := &Message{PlayerID: c.id, Data: data}
-		err = message.parse()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "message parse error: %s\n", err)
-			return
-		}
-
-		// end the connection if the message channel is not valid
-		if message.Channel >= end {
-			fmt.Fprintf(os.Stderr, "Player '%v' sent a message on an invalid channel '%v'\n", message.PlayerID, message.Channel)
-			break
-		}
-
 		// transfer message to incoming
-		server.Incoming <- message
+		server.Incoming <- data
 	}
 }
 

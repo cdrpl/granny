@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -53,26 +52,4 @@ func dbConfig() (host, user, pass string) {
 	pass = os.Getenv("DB_PASS")
 
 	return
-}
-
-// UserEmailExists will check the database for a user with the given email.
-func UserEmailExists(dbPool *pgxpool.Pool, email string) (bool, error) {
-	err := dbPool.QueryRow(context.Background(), "SELECT email FROM users WHERE email = $1", email).Scan(&email)
-	if err == pgx.ErrNoRows {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-// UserNameExists will check the database for a user with the given name.
-func UserNameExists(dbPool *pgxpool.Pool, name string) (bool, error) {
-	err := dbPool.QueryRow(context.Background(), "SELECT name FROM users WHERE name = $1", name).Scan(&name)
-	if err == pgx.ErrNoRows {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	}
-	return true, nil
 }
