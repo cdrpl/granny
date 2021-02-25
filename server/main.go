@@ -12,9 +12,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/cdrpl/granny/server/pkg/env"
-	"github.com/cdrpl/granny/server/pkg/game"
-	"github.com/cdrpl/granny/server/pkg/ws"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -36,8 +33,8 @@ const (
 var pgPool *pgxpool.Pool
 var rdb *redis.Client
 
-var server *ws.Server
-var playerManager *game.PlayerManager
+var server *Server
+var playerManager *PlayerManager
 
 // WebSocket upgrader
 var upgrader = websocket.Upgrader{
@@ -49,8 +46,13 @@ func main() {
 	log.Println("Starting server...")
 
 	// Environment variables
-	loadEnvVars()
-	env.VerifyEnvVars()
+	filename := loadEnvVars()
+	if filename == "" {
+		log.Println("Could not open the .env or .env.defaults file")
+	} else {
+		log.Println("Loaded env vars from", filename)
+	}
+	verifyEnvVars()
 
 	// Init Postgres pool
 	pgPool = createPostgresPool()
@@ -61,32 +63,18 @@ func main() {
 	log.Println("Created the Redis client")
 
 	// WebSocket server
-	server = ws.CreateServer()
+	server = CreateServer()
 
 	go handleIncomingData()
 
 	// Player manager
-	playerManager = game.CreatePlayerManager()
+	playerManager = CreatePlayerManager()
 
 	// Save player data loop
 	go savePlayerData()
 
 	// HTTP server
 	runHTTPServer()
-}
-
-// Loads the env vars from .env or .env.defaults if not in production.
-func loadEnvVars() {
-	if os.Getenv("ENV") != "production" {
-		filename := env.LoadEnvVars()
-
-		// Log the name of the .env file loaded
-		if filename == "" {
-			log.Println("Could not open the .env or .env.defaults file")
-		} else {
-			log.Println("Loaded env vars from", filename)
-		}
-	}
 }
 
 func runHTTPServer() {
@@ -134,7 +122,7 @@ func upgradeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create the player structure
-	player := game.Player{ID: id}
+	player := Player{ID: id}
 
 	// If player data is present, clear the destination, else query the player data and register the player
 	if playerManager.HasPlayer(player.ID) {
@@ -158,7 +146,7 @@ func upgradeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create WebSocket client
-	client := ws.CreateClient(player.ID, conn)
+	client := CreateClient(player.ID, conn)
 	server.Register(client)
 	go client.WritePump()
 	go client.ReadPump(server)
@@ -186,21 +174,21 @@ func savePlayerData() {
 }
 
 // Send the player data in json format to the client.
-func sendPlayerDataToClient(player game.Player) error {
+func sendPlayerDataToClient(player Player) error {
 	js, err := json.Marshal(player)
 	if err != nil {
 		return fmt.Errorf("Failed to convert the player data to JSON: %v", err)
 	}
 
 	// send player data to the client
-	message := &ws.Message{Channel: ws.PlayerData, Data: js}
+	message := &Message{Channel: PlayerData, Data: js}
 	go server.BroadcastSingle(message, player.ID)
 
 	return nil
 }
 
 // Broadcast the player id and position on the player connected channel.
-func broadcastPlayerConnected(player game.Player) {
+func broadcastPlayerConnected(player Player) {
 	fmt.Println("broadcastPlayerConnected not implemented yet")
 	//bytes := player.Pos()
 	//message := &ws.Message{Channel: ws.PlayerConnected, Data: bytes}
@@ -213,7 +201,7 @@ func handleIncomingData() {
 		message := <-server.Incoming
 
 		switch message.Channel {
-		case ws.Chat:
+		case Chat:
 			parseChatMessage(message)
 
 			// re-broadcast the message to every other client
@@ -226,7 +214,7 @@ func handleIncomingData() {
 }
 
 // Create a new message with the player name prepended.
-func parseChatMessage(message *ws.Message) {
+func parseChatMessage(message *Message) {
 	player, _ := playerManager.GetPlayerCopy(message.PlayerID)
 
 	// create array to hold the player name
@@ -241,8 +229,8 @@ func parseChatMessage(message *ws.Message) {
 	message.Data = buf
 }
 
-func parseDestinationMessage(message *ws.Message) (game.Vector, error) {
-	vector := game.Vector{}
+func parseDestinationMessage(message *Message) (Vector, error) {
+	vector := Vector{}
 
 	if len(message.Data) != 8 {
 		return vector, errors.New("Received message on the Destination channel that was not 8 bytes")

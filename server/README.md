@@ -10,7 +10,7 @@ The server handles realtime functionality and network communication is achieved 
 
 ### Environment Variables
 
-The server will attempt to load environment variables from .env and then .env.defaults. Env vars loaded from the .env files will never overwite existing variables. Note that .env files will not be loaded if ENV is set to production, you will need to set the env variables manually when deploying to a production environment.
+The server will attempt to load environment variables from .env and then .env.defaults. Env vars loaded from the .env files will never overwite existing variables.
 
 - `ENV` set this to production when deploying.
 - `DB_HOST` this is the IP address of the PostgreSQL database.

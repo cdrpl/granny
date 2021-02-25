@@ -1,11 +1,10 @@
-package game
+package main
 
 import (
 	"context"
 	"log"
 	"sync"
 
-	"github.com/cdrpl/granny/server/pkg/ws"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -67,7 +66,7 @@ func (m *PlayerManager) GetPlayerCopy(playerID int64) (Player, bool) {
 }
 
 // SendPlayerPositions will send all online player's positions to the specified player.
-func (m *PlayerManager) SendPlayerPositions(server *ws.Server, playerID int64) {
+func (m *PlayerManager) SendPlayerPositions(server *Server, playerID int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -99,7 +98,7 @@ func (m *PlayerManager) PlayersToSlice() []Player {
 }
 
 // SavePlayerData saves the data for each player to the database. Make sure to run in a goroutine.
-func (m *PlayerManager) SavePlayerData(server *ws.Server, pgPool *pgxpool.Pool) {
+func (m *PlayerManager) SavePlayerData(server *Server, pgPool *pgxpool.Pool) {
 	players := m.PlayersToSlice()
 
 	if len(players) == 0 {

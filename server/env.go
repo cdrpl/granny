@@ -1,5 +1,4 @@
-// Package env provides functions to work with environment variables.
-package env
+package main
 
 import (
 	"bufio"
@@ -9,27 +8,27 @@ import (
 	"strings"
 )
 
-// LoadEnvVars will attempt to open the .env or .env.defaults file and set the env vars.
+// loadEnvVars will attempt to open the .env or .env.defaults file and set the env vars.
 // Returns the name of the file that the env vars were loaded from.
-func LoadEnvVars() string {
+func loadEnvVars() string {
 	file, err := os.Open(".env")
 	if err == nil {
-		ParseEnvFile(file)
+		parseEnvFile(file)
 		return ".env"
 	}
 
 	// .env file couldn't be opened, attempt to load .env.defaults
 	file, err = os.Open(".env.defaults")
 	if err == nil {
-		ParseEnvFile(file)
+		parseEnvFile(file)
 		return ".env.defaults"
 	}
 
 	return ""
 }
 
-// ParseEnvFile will scan the file and load the values into os.Environ. Values are split by line in key=value format.
-func ParseEnvFile(file io.Reader) {
+// parseEnvFile will scan the file and load the values into os.Environ. Values are split by line in key=value format.
+func parseEnvFile(file io.Reader) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		split := strings.Split(scanner.Text(), "=")
@@ -42,8 +41,8 @@ func ParseEnvFile(file io.Reader) {
 	}
 }
 
-// VerifyEnvVars will set env vars that haven't been set to default values.
-func VerifyEnvVars() {
+// verifyEnvVars will set env vars that haven't been set to default values.
+func verifyEnvVars() {
 	if os.Getenv("ENV") == "" {
 		os.Setenv("ENV", "development")
 		log.Println("The ENV environment variable was not set, defaulting to development")

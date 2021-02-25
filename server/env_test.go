@@ -1,17 +1,15 @@
-package env_test
+package main
 
 import (
 	"os"
 	"strings"
 	"testing"
-
-	. "github.com/cdrpl/granny/server/pkg/env"
 )
 
 func TestParseEnvFile(t *testing.T) {
 	// It should set the os.environment.
 	reader := strings.NewReader("HOST_TEST=123456\nhost2=num2")
-	ParseEnvFile(reader)
+	parseEnvFile(reader)
 
 	val := os.Getenv("HOST_TEST")
 	val2 := os.Getenv("host2")
@@ -22,7 +20,7 @@ func TestParseEnvFile(t *testing.T) {
 	// It should not overwrite existing values
 	os.Setenv("HOST_TEST", "already_set")
 	reader = strings.NewReader("HOST_TEST=123456")
-	ParseEnvFile(reader)
+	parseEnvFile(reader)
 
 	val = os.Getenv("HOST_TEST")
 	if val != "already_set" {
@@ -35,6 +33,6 @@ func BenchmarkParseEnvFile(b *testing.B) {
 		b.StopTimer()
 		reader := strings.NewReader("HOST_TEST=123456\nhost2=num2")
 		b.StartTimer()
-		ParseEnvFile(reader)
+		parseEnvFile(reader)
 	}
 }
