@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cdrpl/idlemon/pkg/db"
 	"github.com/cdrpl/idlemon/pkg/env"
 	"github.com/cdrpl/idlemon/pkg/game"
 	"github.com/cdrpl/idlemon/pkg/ws"
@@ -53,17 +52,17 @@ func main() {
 	env.VerifyEnvVars()
 
 	// Init Postgres pool
-	pgPool = db.CreatePostgresPool()
+	pgPool = createPostgresPool()
 	log.Println("Created the Postgres pool")
 
 	// Run the migrations
-	err := db.MigrateUp(pgPool)
+	/*err := db.MigrateUp(pgPool)
 	if err != nil {
 		log.Fatalln("Failed the run database migrations:", err)
-	}
+	}*/
 
 	// Init Redis client
-	rdb = db.CreateRedisClient()
+	rdb = createRedisClient()
 	log.Println("Created the Redis client")
 
 	// WebSocket server
@@ -117,23 +116,17 @@ func httpRouter(c Controller) (r *gin.Engine) {
 		r = gin.Default()
 	}
 
-	// Index page
-	r.StaticFile("/", "./html/index.html")
-
 	// Health route
 	r.GET("/health", c.health)
 
 	// WebSocket upgrade handler route
-	r.GET("/connect", upgradeHandler)
+	r.GET("/ws", upgradeHandler)
 
 	// Sign up route
 	r.POST("/sign-up", c.signUpHandler)
 
 	// Sign in route
 	r.POST("/sign-in", c.signInHandler)
-
-	// Create remember token route
-	r.POST("/remember-token/create", c.createRememberToken)
 
 	return
 }
@@ -168,7 +161,7 @@ func upgradeHandler(c *gin.Context) {
 	}
 
 	// Verify the authentication token
-	isAuthorized, err := db.CheckAuth(rdb, userID, token)
+	isAuthorized, err := checkAuth(rdb, userID, token)
 	if err != nil {
 		log.Println("Check auth failed:", err)
 		c.String(401, "Unauthorized")

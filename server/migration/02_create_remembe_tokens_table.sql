@@ -1,6 +1,0 @@
-CREATE TABLE IF NOT EXISTS remember_tokens (
-    id VARCHAR PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    token VARCHAR NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
-)

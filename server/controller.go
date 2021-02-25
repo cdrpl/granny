@@ -2,15 +2,11 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"github.com/cdrpl/idlemon/pkg/db"
-	"github.com/cdrpl/idlemon/pkg/rnd"
 	"github.com/cdrpl/idlemon/pkg/validate"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
@@ -54,7 +50,7 @@ func (c *Controller) signUpHandler(ctx *gin.Context) {
 	}
 
 	// User name must be unique
-	nameExists, err := db.UserNameExists(c.PgPool, form.Name)
+	nameExists, err := UserNameExists(c.PgPool, form.Name)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(500, gin.H{"message": "An error has occured"})
@@ -65,7 +61,7 @@ func (c *Controller) signUpHandler(ctx *gin.Context) {
 	}
 
 	// User email must be unique
-	emailExists, err := db.UserEmailExists(c.PgPool, form.Email)
+	emailExists, err := UserEmailExists(c.PgPool, form.Email)
 	if err != nil {
 		log.Println(err)
 		ctx.JSON(500, gin.H{"message": err})
@@ -84,7 +80,7 @@ func (c *Controller) signUpHandler(ctx *gin.Context) {
 	}
 
 	// Create new user
-	user := db.User{Name: form.Name, Email: form.Email, Pass: string(hash)}
+	user := User{Name: form.Name, Email: form.Email, Pass: string(hash)}
 
 	// Insert user
 	err = user.Insert(c.PgPool)
@@ -115,7 +111,7 @@ func (c *Controller) signInHandler(ctx *gin.Context) {
 	}
 
 	// Find user
-	user := db.User{}
+	user := User{}
 	err := c.PgPool.QueryRow(context.Background(), "SELECT id, name, pass FROM users WHERE email = $1", form.Email).Scan(&user.ID, &user.Name, &user.Pass)
 	if err == pgx.ErrNoRows {
 		ctx.JSON(401, gin.H{"message": "Unauthorized"})
@@ -134,7 +130,7 @@ func (c *Controller) signInHandler(ctx *gin.Context) {
 	}
 
 	// Create a random auth token
-	token, err := rnd.GenerateToken(16)
+	token, err := generateToken(16)
 	if err != nil {
 		log.Println("Failed to generate a random auth token:", err)
 		ctx.JSON(500, gin.H{"message": "An error has occured"})
@@ -151,58 +147,6 @@ func (c *Controller) signInHandler(ctx *gin.Context) {
 		"data": gin.H{
 			"token": token,
 			"id":    user.ID,
-		},
-	})
-}
-
-// Generates a remember token if the given authentication token is valid.
-func (c *Controller) createRememberToken(ctx *gin.Context) {
-	id := ctx.PostForm("id")
-	authToken := ctx.PostForm("token")
-
-	if id == "" || authToken == "" {
-		ctx.JSON(400, gin.H{"message": "id and token are required"})
-		return
-	}
-
-	// Verify the authentication token
-	isAuthorized, err := db.CheckAuth(c.Rdb, id, authToken)
-	if err != nil {
-		log.Println("Check auth failed:", err)
-		ctx.JSON(401, gin.H{"message": "Unauthorized"})
-		return
-	} else if !isAuthorized {
-		ctx.JSON(401, gin.H{"message": "Unauthorized"})
-		return
-	}
-
-	// Generate token
-	seriesID, rememberToken, err := rnd.GenerateRememberToken()
-	if err != nil {
-		log.Println("Failed to generate a random auth token:", err)
-		ctx.JSON(500, gin.H{"message": "An error has occured"})
-		return
-	}
-
-	// Hash the remember token
-	hash := sha256.Sum256([]byte(rememberToken))
-	hashStr := hex.EncodeToString(hash[:])
-
-	// Insert token row
-	sql := "INSERT INTO remember_tokens (id, user_id, token, created_at) VALUES ($1, $2, $3, $4)"
-	_, err = c.PgPool.Exec(context.Background(), sql, seriesID, id, hashStr, time.Now())
-	if err != nil {
-		log.Println("Failed to insert the remember_tokens row:", err)
-		ctx.JSON(500, gin.H{"message": "An error has occured"})
-		return
-	}
-
-	// Respond with the series ID and the unhashed token
-	ctx.JSON(200, gin.H{
-		"message": "Ok",
-		"data": gin.H{
-			"id":    seriesID,
-			"token": rememberToken,
 		},
 	})
 }
