@@ -1,0 +1,20 @@
+upstream lobby {
+	server 127.0.0.1:4001;
+}
+
+server {
+	server_name lobby_proxy;
+	listen 0.0.0.0:3001;
+
+	location /ws {
+		proxy_pass http://lobby;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection "Upgrade";
+		proxy_set_header Host $host;
+	}
+
+	location / {
+		proxy_pass http://lobby;
+	}
+}

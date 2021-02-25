@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - "${PORT}:${PORT}"
+      - "${LOBBY_PORT}:${LOBBY_PORT}"
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - LOBBY_PORT=${LOBBY_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_USER}
+    restart: always
