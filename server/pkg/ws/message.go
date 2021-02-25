@@ -27,7 +27,7 @@ type Channel uint16
 
 // Message is used to easily parse data received and sent over the WebSocket connections.
 type Message struct {
-	PlayerID uint32 // The player ID of the message sender.
+	PlayerID int64 // The player ID of the message sender.
 	Channel  Channel
 	Data     []byte
 }

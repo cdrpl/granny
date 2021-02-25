@@ -55,19 +55,6 @@ func dbConfig() (host, user, pass string) {
 	return
 }
 
-// checkAuth will return true if the user is authorized and false if not.
-// Authorization is determined by checking redis for the user id and token.
-// The user id is the key and the token is the value.
-func checkAuth(rdb *redis.Client, userID, token string) (bool, error) {
-	result, err := rdb.Get(context.Background(), userID).Result()
-	if err == redis.Nil {
-		return false, nil
-	} else if err != nil {
-		return false, fmt.Errorf("CheckAuth() failed: %v", err)
-	}
-	return result == token, nil
-}
-
 // UserEmailExists will check the database for a user with the given email.
 func UserEmailExists(dbPool *pgxpool.Pool, email string) (bool, error) {
 	err := dbPool.QueryRow(context.Background(), "SELECT email FROM users WHERE email = $1", email).Scan(&email)

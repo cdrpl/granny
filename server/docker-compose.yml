@@ -4,15 +4,14 @@ services:
     build:
       context: .
     ports:
-      - "${PORT}:${PORT}"
+      - "3010:3010"
+    restart: always
     environment:
-      - ENV=production
-      - PORT=${PORT}
+      - ENV=${ENV}
       - DB_HOST=postgres
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - REDIS_HOST=redis
-    restart: on-failure
     depends_on:
       - redis
       - postgres
@@ -20,11 +19,12 @@ services:
     image: redis:6.0-alpine3.12
     ports:
       - "6379:6379"
+    restart: always
   postgres:
     image: postgres:13.1-alpine
     ports:
       - "5432:5432"
+    restart: always
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
-      

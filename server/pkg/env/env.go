@@ -48,10 +48,6 @@ func VerifyEnvVars() {
 		os.Setenv("ENV", "development")
 		log.Println("The ENV environment variable was not set, defaulting to development")
 	}
-	if os.Getenv("PORT") == "" {
-		os.Setenv("PORT", "5000")
-		log.Println("The PORT environment variable was not set, defaulting to 5000")
-	}
 	if os.Getenv("DB_HOST") == "" {
 		os.Setenv("DB_HOST", "127.0.0.1")
 		log.Println("The DB_HOST environment variable was not set, defaulting to 127.0.0.1")

@@ -2,9 +2,7 @@ package game
 
 import (
 	"context"
-	"encoding/binary"
 	"log"
-	"math"
 	"sync"
 
 	"github.com/cdrpl/granny/server/pkg/ws"
@@ -13,32 +11,21 @@ import (
 
 // Player is used to hold player data.
 type Player struct {
-	ID          uint32 `json:"id"`
-	Name        string `json:"name"`
-	Position    Vector `json:"position"`
-	Destination Vector `json:"-"` // The position that the player is moving towards.
-}
-
-// Pos will return the player position as a byte slice.
-// The player ID is included at the start of the slice.
-func (p *Player) Pos() []byte {
-	buf := make([]byte, 12)
-	binary.LittleEndian.PutUint32(buf[:4], p.ID)
-	binary.LittleEndian.PutUint32(buf[4:8], math.Float32bits(float32(p.Position.X)))
-	binary.LittleEndian.PutUint32(buf[8:], math.Float32bits(float32(p.Position.Y)))
-	return buf
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	Position Vector `json:"position"`
 }
 
 // PlayerManager tracks the player data.
 type PlayerManager struct {
-	players map[uint32]*Player
+	players map[int64]*Player
 	mutex   sync.Mutex
 }
 
 // CreatePlayerManager will create and return a Manager instance
 func CreatePlayerManager() *PlayerManager {
 	return &PlayerManager{
-		players: make(map[uint32]*Player),
+		players: make(map[int64]*Player),
 	}
 }
 
@@ -51,7 +38,7 @@ func (m *PlayerManager) Register(player *Player) {
 }
 
 // Unregister will remove the player from the player map
-func (m *PlayerManager) Unregister(playerID uint32) {
+func (m *PlayerManager) Unregister(playerID int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -59,7 +46,7 @@ func (m *PlayerManager) Unregister(playerID uint32) {
 }
 
 // HasPlayer will return true if the player is in the players map.
-func (m *PlayerManager) HasPlayer(playerID uint32) bool {
+func (m *PlayerManager) HasPlayer(playerID int64) bool {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -68,7 +55,7 @@ func (m *PlayerManager) HasPlayer(playerID uint32) bool {
 }
 
 // GetPlayerCopy will return a copy of the player, ok will be false if player can't be found.
-func (m *PlayerManager) GetPlayerCopy(playerID uint32) (Player, bool) {
+func (m *PlayerManager) GetPlayerCopy(playerID int64) (Player, bool) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -79,36 +66,8 @@ func (m *PlayerManager) GetPlayerCopy(playerID uint32) (Player, bool) {
 	return Player{}, false
 }
 
-// ClearPlayerDestination will set the player destination to the current position.
-func (m *PlayerManager) ClearPlayerDestination(playerID uint32) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if player, ok := m.players[playerID]; ok {
-		player.Destination = player.Position
-	}
-}
-
-// UpdatePlayerPositions will move the players towards their destinations by 1 tick.
-func (m *PlayerManager) UpdatePlayerPositions(server *ws.Server, moveSpeed float64) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	for _, player := range m.players {
-		isOnline := server.PlayerOnline(player.ID)
-
-		if isOnline && player.Position != player.Destination {
-			player.Position.MoveTowards(player.Destination, moveSpeed)
-
-			// Broadcast the updated position
-			message := &ws.Message{Channel: ws.Position, Data: player.Pos()}
-			go server.BroadcastAll(message)
-		}
-	}
-}
-
 // SendPlayerPositions will send all online player's positions to the specified player.
-func (m *PlayerManager) SendPlayerPositions(server *ws.Server, playerID uint32) {
+func (m *PlayerManager) SendPlayerPositions(server *ws.Server, playerID int64) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -121,19 +80,9 @@ func (m *PlayerManager) SendPlayerPositions(server *ws.Server, playerID uint32) 
 
 		if isOnline {
 			// Broadcast the player position
-			message := &ws.Message{Channel: ws.Position, Data: player.Pos()}
-			go server.BroadcastSingle(message, playerID)
+			//message := &ws.Message{Channel: ws.Position, Data: player.Pos()}
+			//go server.BroadcastSingle(message, playerID)
 		}
-	}
-}
-
-// SetPlayerDestination will set the player destination if player exists.
-func (m *PlayerManager) SetPlayerDestination(playerID uint32, destination Vector) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if player, ok := m.players[playerID]; ok {
-		player.Destination = destination
 	}
 }
 

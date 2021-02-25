@@ -1,27 +1,19 @@
-FROM golang:1.15-alpine3.12 AS build
+FROM golang:alpine AS build
 
-WORKDIR /go/src/github.com/cdrpl/server
+WORKDIR /go/src/github.com/cdrpl/granny/server
 
 # Copy project to build dir and install
 COPY . .
 RUN go install .
 
 # Empty alpine image
-FROM alpine:3.12
+FROM alpine
 
-WORKDIR /go/src/github.com/cdrpl/server
-
-# Default env
-ENV ENV=production
-ENV PORT=3000
+WORKDIR /go/src/github.com/cdrpl/granny/server
 
 # Expose port
-EXPOSE 3000
-
-# Copy the migrations and html
-COPY --from=build /go/src/github.com/cdrpl/server/migration ./migration
-COPY --from=build /go/src/github.com/cdrpl/server/html ./html
+EXPOSE 3010
 
 # Copy bin to new image
 COPY --from=build /go/bin /go/bin
-ENTRYPOINT [ "/go/bin/server" ]
+ENTRYPOINT [ "/go/bin/granny/server" ]

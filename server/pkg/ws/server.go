@@ -1,14 +1,13 @@
 package ws
 
 import (
-	"encoding/binary"
 	"log"
 	"sync"
 )
 
 // Server tracks the clients
 type Server struct {
-	clients  map[uint32]*Client
+	clients  map[int64]*Client
 	Incoming chan *Message // Incoming data is sent to this channel.
 	mutex    sync.Mutex    // Mutex used for the clients map.
 }
@@ -16,7 +15,7 @@ type Server struct {
 // CreateServer will return a Server instance.
 func CreateServer() *Server {
 	return &Server{
-		clients:  make(map[uint32]*Client),
+		clients:  make(map[int64]*Client),
 		Incoming: make(chan *Message),
 		mutex:    sync.Mutex{},
 	}
@@ -42,10 +41,10 @@ func (s *Server) Unregister(client *Client) {
 		close(client.send)
 
 		// send player disconnected event
-		var idB [4]byte
+		/*var idB [4]byte
 		binary.LittleEndian.PutUint32(idB[:], client.id)
 		message := &Message{Channel: PlayerDisconnected, Data: idB[:]}
-		go s.BroadcastAll(message)
+		go s.BroadcastAll(message)*/
 	}
 }
 
@@ -61,7 +60,7 @@ func (s *Server) broadcast(message *Message, client *Client) {
 }
 
 // Broadcast will send the message to the given targets.
-func (s *Server) Broadcast(message *Message, targets []uint32) {
+func (s *Server) Broadcast(message *Message, targets []int64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -73,7 +72,7 @@ func (s *Server) Broadcast(message *Message, targets []uint32) {
 }
 
 // BroadcastSingle will send the message to the specified client.
-func (s *Server) BroadcastSingle(message *Message, target uint32) {
+func (s *Server) BroadcastSingle(message *Message, target int64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -93,7 +92,7 @@ func (s *Server) BroadcastAll(message *Message) {
 }
 
 // BroadcastAllExclude will broadcast the message to every client except the specified one.
-func (s *Server) BroadcastAllExclude(message *Message, exclude uint32) {
+func (s *Server) BroadcastAllExclude(message *Message, exclude int64) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -107,7 +106,7 @@ func (s *Server) BroadcastAllExclude(message *Message, exclude uint32) {
 
 // PlayerOnline will return true if the player has an active connection.
 // Can be safely called from other goroutines.
-func (s *Server) PlayerOnline(id uint32) bool {
+func (s *Server) PlayerOnline(id int64) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 

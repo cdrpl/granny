@@ -9,7 +9,7 @@ import (
 
 // User models the "users" table
 type User struct {
-	ID        uint32    `json:"id"`
+	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Pass      string    `json:"pass"`

@@ -17,13 +17,13 @@ const (
 
 // Client represents a player's WebSocket connection.
 type Client struct {
-	id   uint32
+	id   int64
 	conn *websocket.Conn
 	send chan []byte // channel used for sending data to the conn.
 }
 
 // CreateClient will create and return a Client instance.
-func CreateClient(id uint32, conn *websocket.Conn) *Client {
+func CreateClient(id int64, conn *websocket.Conn) *Client {
 	return &Client{
 		id:   id,
 		conn: conn,

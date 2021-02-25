@@ -8,20 +8,21 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/cdrpl/granny/server/pkg/env"
 	"github.com/cdrpl/granny/server/pkg/game"
 	"github.com/cdrpl/granny/server/pkg/ws"
-	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 const (
+	addr = "0.0.0.0:3010"
+
 	// Persist player data to the database every saveInterval.
 	saveInterval = time.Second * 60 * 5
 
@@ -55,12 +56,6 @@ func main() {
 	pgPool = createPostgresPool()
 	log.Println("Created the Postgres pool")
 
-	// Run the migrations
-	/*err := db.MigrateUp(pgPool)
-	if err != nil {
-		log.Fatalln("Failed the run database migrations:", err)
-	}*/
-
 	// Init Redis client
 	rdb = createRedisClient()
 	log.Println("Created the Redis client")
@@ -76,21 +71,8 @@ func main() {
 	// Save player data loop
 	go savePlayerData()
 
-	// Update player positions loop
-	go updatePositions()
-
-	// HTTP port
-	port := os.Getenv("PORT")
-	log.Println("Starting HTTP server on port", port)
-
-	// HTTP controller/router
-	controller := Controller{PgPool: pgPool, Rdb: rdb}
-	router := httpRouter(controller)
-
-	// Run HTTP server
-	if err := router.Run("0.0.0.0:" + port); err != nil {
-		log.Println("Run HTTP server error:", err)
-	}
+	// HTTP server
+	runHTTPServer()
 }
 
 // Loads the env vars from .env or .env.defaults if not in production.
@@ -107,104 +89,71 @@ func loadEnvVars() {
 	}
 }
 
-func httpRouter(c Controller) (r *gin.Engine) {
-	// Create router based on env
-	if os.Getenv("ENV") == "production" {
-		gin.SetMode(gin.ReleaseMode)
-		r = gin.New()
-	} else {
-		r = gin.Default()
+func runHTTPServer() {
+	log.Println("Starting server -", addr)
+
+	http.HandleFunc("/ws", upgradeHandler)
+
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Println("Run HTTP server error:", err)
 	}
-
-	// Health route
-	r.GET("/health", c.health)
-
-	// WebSocket upgrade handler route
-	r.GET("/ws", upgradeHandler)
-
-	// Sign up route
-	r.POST("/sign-up", c.signUpHandler)
-
-	// Sign in route
-	r.POST("/sign-in", c.signInHandler)
-
-	return
 }
 
 // Handles upgrading of WebSocket requests.
-func upgradeHandler(c *gin.Context) {
-	userID := c.GetHeader("user-id")
-	token := c.GetHeader("auth-token")
+func upgradeHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("%s/ws", addr)
 
-	// Reject requests with missing header values
-	if userID == "" || token == "" {
-		c.String(401, "Unauthorized")
-		return
-	}
-
-	log.Println("User", userID, "is attempting to login")
-
-	// Convert userID to uint64
-	userIDInt, err := strconv.ParseUint(userID, 10, 32)
+	auth := r.Header.Get("authorization")
+	id, token, err := parseAuthorization(auth)
 	if err != nil {
-		log.Println("Failed to parse the user id:", err)
-		c.String(401, "Unauthorized")
+		log.Println("Invalid authorization header:", auth)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	log.Println("User", id, "is attempting to login")
 
 	// Check if player is already connected
-	isOnline := server.PlayerOnline(uint32(userIDInt))
+	isOnline := server.PlayerOnline(id)
 	if isOnline {
-		log.Printf("Dual login detected for player '%v', the connection will be denied\n", userIDInt)
-		c.String(401, "Unauthorized")
+		log.Println("User", id, "login failed since user is already online")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Verify the authentication token
-	isAuthorized, err := checkAuth(rdb, userID, token)
+	isAuthorized, err := checkAuth(rdb, id, token)
 	if err != nil {
 		log.Println("Check auth failed:", err)
-		c.String(401, "Unauthorized")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	} else if !isAuthorized {
 		log.Println("Auth token is not valid:", token)
-		c.String(401, "Unauthorized")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// Create the player structure
-	player := game.Player{ID: uint32(userIDInt)}
+	player := game.Player{ID: id}
 
 	// If player data is present, clear the destination, else query the player data and register the player
 	if playerManager.HasPlayer(player.ID) {
-		playerManager.ClearPlayerDestination(player.ID)
 		player, _ = playerManager.GetPlayerCopy(player.ID)
 	} else {
-		// Get the user data from the database
-		err = pgPool.QueryRow(context.Background(), "SELECT name FROM users WHERE id = $1", userID).Scan(&player.Name)
+		err = pgPool.QueryRow(context.Background(), "SELECT name FROM users WHERE id = $1", id).Scan(&player.Name)
 		if err != nil {
 			log.Println("Failed to query the users table:", err)
-			c.String(401, "Unauthorized")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-
-		// grab position data
-		err = pgPool.QueryRow(context.Background(), "SELECT x, y FROM positions where id = $1", userID).Scan(&player.Position.X, &player.Position.Y)
-		if err != nil {
-			log.Println("Failed to query the positions table:", err)
-			c.String(401, "Unauthorized")
-			return
-		}
-
-		player.Destination = player.Position // To prevent player from moving to a zeroed out destination
 		playerManager.Register(&player)
 	}
 
 	// Upgrade the connection
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Failed to upgrade the connection:", err)
-		c.String(401, "Unauthorized")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -219,7 +168,7 @@ func upgradeHandler(c *gin.Context) {
 	if err != nil {
 		server.Unregister(client)
 		log.Println(err)
-		c.String(401, "Unauthorized")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -233,16 +182,6 @@ func savePlayerData() {
 	for {
 		<-saveTicker.C
 		playerManager.SavePlayerData(server, pgPool)
-	}
-}
-
-func updatePositions() {
-	posTicker := time.NewTicker(posInterval) // position updates
-	defer posTicker.Stop()
-
-	for {
-		<-posTicker.C
-		playerManager.UpdatePlayerPositions(server, moveSpeed)
 	}
 }
 
@@ -262,10 +201,11 @@ func sendPlayerDataToClient(player game.Player) error {
 
 // Broadcast the player id and position on the player connected channel.
 func broadcastPlayerConnected(player game.Player) {
-	bytes := player.Pos()
-	message := &ws.Message{Channel: ws.PlayerConnected, Data: bytes}
-	go server.BroadcastAll(message)
-	go playerManager.SendPlayerPositions(server, player.ID)
+	fmt.Println("broadcastPlayerConnected not implemented yet")
+	//bytes := player.Pos()
+	//message := &ws.Message{Channel: ws.PlayerConnected, Data: bytes}
+	//go server.BroadcastAll(message)
+	//go playerManager.SendPlayerPositions(server, player.ID)
 }
 
 func handleIncomingData() {
@@ -278,15 +218,6 @@ func handleIncomingData() {
 
 			// re-broadcast the message to every other client
 			server.BroadcastAllExclude(message, message.PlayerID)
-
-		case ws.Destination:
-			destination, err := parseDestinationMessage(message)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			playerManager.SetPlayerDestination(message.PlayerID, destination)
 
 		default:
 			fmt.Fprintf(os.Stderr, "Received a message on an unsupported channel: %v\n", message.Channel)
