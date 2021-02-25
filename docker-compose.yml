@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  api:
+    build:
+      context: ./api
+    ports: 
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DB_USER=postgres
+      - DB_PASS=password
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+  server:
+    build:
+      context: ./server
+    ports:
+      - "3010:3010"
+    environment:
+      - ENV=development
+      - DB_USER=postgres
+      - DB_PASS=password
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    restart: always

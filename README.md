@@ -19,3 +19,7 @@ Granny can be thought of as being split into 3 parts.
 * PostgreSQL
 * Redis
 * Unity3D
+
+### Docker Compose
+The Granny backend can be easily setup with Docker Compose. Just install Docker and run the following command.
+* `docker-compose up -d`

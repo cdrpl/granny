@@ -16,4 +16,4 @@ EXPOSE 3010
 
 # Copy bin to new image
 COPY --from=build /go/bin /go/bin
-ENTRYPOINT [ "/go/bin/granny/server" ]
+ENTRYPOINT [ "/go/bin/server" ]
