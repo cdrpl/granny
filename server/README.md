@@ -24,9 +24,3 @@ The server can be run as a Docker container. The container will need access to a
 
 1. Build image - `docker build -t server .`
 2. Run container - `docker run -itd --env-file .env --restart always --network host --name server server`
-
-### Docker Compose
-
-Docker Compose is also supported, just run the following command.
-
-- `docker-compose up -d`
