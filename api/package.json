@@ -20,7 +20,6 @@
     "@types/morgan": "^1.9.2",
     "@types/redis": "^2.8.28",
     "@types/supertest": "^2.0.10",
-    "@types/ws": "^7.4.0",
     "@typescript-eslint/eslint-plugin": "^4.15.2",
     "@typescript-eslint/parser": "^4.15.2",
     "chai": "^4.3.0",
@@ -38,11 +37,6 @@
     "knex": "^0.95.0-next3",
     "morgan": "^1.10.0",
     "pg": "^8.5.1",
-    "redis": "^3.0.2",
-    "ws": "^7.4.3"
-  },
-  "optionalDependencies": {
-    "bufferutil": "^4.0.3",
-    "utf-8-validate": "^5.0.4"
+    "redis": "^3.0.2"
   }
 }

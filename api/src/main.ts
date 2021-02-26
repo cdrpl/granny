@@ -1,7 +1,6 @@
 import { createApp } from "./app.js";
 import { knex } from "./knex.js";
 import { router } from "./router.js";
-import "./lobby.js"; // WebSocket server will be started from importing.
 
 // Run migrations
 await knex.migrate.latest();
