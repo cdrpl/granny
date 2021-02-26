@@ -64,7 +64,11 @@ func runHTTPServer() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			fmt.Fprint(w, "OK")
+			if r.URL.String() == "/" {
+				fmt.Fprint(w, "OK")
+			} else {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			}
 		} else {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
