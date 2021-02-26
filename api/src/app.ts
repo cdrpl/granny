@@ -29,7 +29,7 @@ function createApp(router: Router): Express {
       message = "An error has occured"; // Hide err message in production
     }
 
-    res.status(500).json({ error: { status: 500, message } });
+    res.status(500).json({ error: { code: 500, message } });
   };
 
   app.use(errHandler);

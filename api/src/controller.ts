@@ -48,14 +48,14 @@ async function signIn(req: Request, res: Response, next: NextFunction) {
     // Get the user password
     const user: User = await knex("users").select("id", "name", "pass").where({ email }).first();
     if (!user) {
-      res.status(401).json({ error: { status: 401, message: "Invalid credentials" } });
+      res.status(401).json({ error: { code: 401, message: "Invalid credentials" } });
       return;
     }
 
     // Compare hash
     const validPass = await compareHash(pass, user.pass);
     if (!validPass) {
-      res.status(401).json({ error: { status: 401, message: "Invalid credentials" } });
+      res.status(401).json({ error: { code: 401, message: "Invalid credentials" } });
       return;
     }
 
