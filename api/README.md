@@ -24,7 +24,7 @@ Make a copy of the .env.example file and name it .env, the .env file will be loa
 
 ### Run with Docker
 
-The server can be run as a Docker container. The container will need access to a Redis and Postgres server, the addresses can be set by using a .env file and passing it to the docker run command. Note that `--network host` is not supported on windows, ports 3000 needs to be exposed by replacing `--network host` in the run command with `-p 3000:3000`
+The server can be run as a Docker container. The container will need access to a Redis and Postgres server, the addresses can be set by using a .env file and passing it to the docker run command. Note that `--network host` is not supported on windows, port 3000 needs to be exposed by replacing `--network host` in the run command with `-p 3000:3000`
 
 1. Build Image - `docker build -t api .`
 2. Run Container - `docker run -itd --env-file .env --restart always --name api --network host api`
