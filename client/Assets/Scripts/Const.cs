@@ -13,37 +13,11 @@
         /// <summary>
         /// The address of the public facing API.
         /// </summary>
-        public const string PUBLIC_API = "127.0.0.1:3000";
+        public const string API_ADDR = "127.0.0.1:3000";
 
         /// <summary>
         /// The address of the lobby server.
         /// </summary>
-        public const string LOBBY_ADDR = "127.0.0.1:3001";
-
-        /// <summary>
-        /// TCP messages are sent over channels.
-        /// </summary>
-        public enum Channel
-        {
-            /// <summary> 
-            /// For authenticating clients.
-            /// </summary>
-            AuthRequest,
-
-            /// <summary> 
-            /// Response to clients after receiving an Auth request.
-            /// </summary>
-            AuthResponse,
-
-            /// <summary> 
-            /// Clients are pinged periodically to detect disconnections.
-            /// </summary>
-            Ping,
-
-            /// <summary> 
-            /// Chat messages are sent through this channel.
-            /// </summary>
-            Chat,
-        }
+        public const string SERVER_ADDR = "127.0.0.1:3010";
     }
 }

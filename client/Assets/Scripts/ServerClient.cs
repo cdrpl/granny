@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Idlemon
 {
-    public class LobbyClient : MonoBehaviour
+    public class ServerClient : MonoBehaviour
     {
         WebSocket websocket;
 
@@ -16,14 +16,14 @@ namespace Idlemon
                 return;
             }
 
-            // Authentication details in header
+            // Put authorization details in header
+            string authorization = Global.User.Id.ToString() + ":" + Global.User.Token;
             var header = new Dictionary<string, string>
             {
-                {"id", Global.User.Id.ToString()},
-                {"token", Global.User.Token},
+                {"authorization", authorization},
             };
 
-            websocket = new WebSocket("ws://" + Const.LOBBY_ADDR + "/ws", header);
+            websocket = new WebSocket("ws://" + Const.SERVER_ADDR + "/ws", header);
 
             websocket.OnOpen += () =>
             {
@@ -42,16 +42,9 @@ namespace Idlemon
 
             websocket.OnMessage += (bytes) =>
             {
-                Debug.Log("OnMessage!");
-                Debug.Log(bytes);
-
-                // getting the message as a string
-                // var message = System.Text.Encoding.UTF8.GetString(bytes);
-                // Debug.Log("OnMessage! " + message);
+                string message = System.Text.Encoding.UTF8.GetString(bytes);
+                Debug.Log("Recv message: " + message);
             };
-
-            // Keep sending messages at every 0.3s
-            InvokeRepeating("SendWebSocketMessage", 0.0f, 0.3f);
 
             // waiting for messages
             await websocket.Connect();
@@ -72,11 +65,11 @@ namespace Idlemon
 #endif
         }
 
-        async void SendWebSocketMessage()
+        async void SendWebSocketMessage(string message)
         {
             if (websocket.State == WebSocketState.Open)
             {
-                await websocket.SendText("Client says hello");
+                await websocket.SendText(message);
             }
         }
 
