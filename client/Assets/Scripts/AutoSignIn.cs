@@ -8,6 +8,8 @@ namespace Idlemon
     /// </summary>
     public class AutoSignIn : MonoBehaviour
     {
+        public ServerClient serverClient;
+
         async void Awake()
         {
             if (Global.User != null)
@@ -19,7 +21,8 @@ namespace Idlemon
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                Debug.Log("User has logged on");
+                Debug.Log("User has logged on: " + Global.User.Name);
+                serverClient.Connect();
             }
             else
             {

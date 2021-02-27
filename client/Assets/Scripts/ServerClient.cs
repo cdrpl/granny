@@ -8,14 +8,16 @@ namespace Idlemon
     {
         WebSocket websocket;
 
+        void Start()
+        {
+            if (Global.User != null)
+            {
+                Connect();
+            }
+        }
+
         public async void Connect()
         {
-            if (Global.User == null)
-            {
-                Debug.LogWarning("Global user is null, LobbyClient will not connect");
-                return;
-            }
-
             // Put authorization details in header
             string authorization = Global.User.Id.ToString() + ":" + Global.User.Token;
             var header = new Dictionary<string, string>
@@ -27,12 +29,12 @@ namespace Idlemon
 
             websocket.OnOpen += () =>
             {
-                Debug.Log("Connection open!");
+                Debug.Log("Server client connected");
             };
 
             websocket.OnError += (e) =>
             {
-                Debug.Log("Error! " + e);
+                Debug.Log("Server client error: " + e);
             };
 
             websocket.OnClose += (e) =>
@@ -52,11 +54,6 @@ namespace Idlemon
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                Connect();
-            }
-
 #if !UNITY_WEBGL || UNITY_EDITOR
             if (websocket != null)
             {

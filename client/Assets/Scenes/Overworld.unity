@@ -1091,6 +1091,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f64c0d63effe492459d633974dd3dcaf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serverClient: {fileID: 2020505806}
 --- !u!1 &1541344339
 GameObject:
   m_ObjectHideFlags: 0
@@ -1301,7 +1302,7 @@ GameObject:
   - component: {fileID: 2020505807}
   - component: {fileID: 2020505806}
   m_Layer: 0
-  m_Name: WebSocket Client
+  m_Name: Server Client
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
