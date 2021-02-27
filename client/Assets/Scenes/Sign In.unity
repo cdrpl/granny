@@ -2260,7 +2260,6 @@ MonoBehaviour:
   password: {fileID: 777089661}
   rememberMe: {fileID: 206735301}
   signInBtn: {fileID: 167086883}
-  player: {fileID: 11400000, guid: 545bf6ef79e5a8b47b39b3f452256883, type: 2}
   flashMessage: {fileID: 505616529}
   loadingPanel: {fileID: 793670299544467394}
 --- !u!114 &1162673269217587
