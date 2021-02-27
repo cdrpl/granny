@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -52,4 +53,16 @@ func dbConfig() (host, user, pass string) {
 	pass = os.Getenv("DB_PASS")
 
 	return
+}
+
+// Query the database for the user's data.
+func queryUserData(id int64, pg *pgxpool.Pool) (*User, error) {
+	user := &User{ID: id}
+
+	err := pg.QueryRow(context.Background(), "SELECT name FROM users WHERE id = $1", id).Scan(&user.Name)
+	if err != nil {
+		return user, errors.New("failed to query the users table: " + err.Error())
+	}
+
+	return user, nil
 }

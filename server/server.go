@@ -26,7 +26,7 @@ func (s *Server) Register(client *Client) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	log.Printf("Player '%v' connected\n", client.id)
+	log.Printf("User '%v' connected\n", client.id)
 	s.clients[client.id] = client
 }
 
@@ -36,7 +36,7 @@ func (s *Server) Unregister(client *Client) {
 	defer s.mutex.Unlock()
 
 	if _, ok := s.clients[client.id]; ok {
-		log.Printf("Player '%v' disconnected\n", client.id)
+		log.Printf("User '%v' disconnected\n", client.id)
 		delete(s.clients, client.id)
 		close(client.send)
 	}
@@ -98,9 +98,9 @@ func (s *Server) BroadcastAllExclude(data []byte, exclude int64) {
 	}
 }
 
-// PlayerOnline will return true if the player has an active connection.
+// IsUserOnline will return true if the user has an active connection.
 // Can be safely called from other goroutines.
-func (s *Server) PlayerOnline(id int64) bool {
+func (s *Server) IsUserOnline(id int64) bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 

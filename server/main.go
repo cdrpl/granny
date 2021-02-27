@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,21 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-const (
-	addr = "0.0.0.0:3010" // The address of the WebSocket server
-)
-
-var pgPool *pgxpool.Pool
-var rdb *redis.Client
-
-var server *Server
-var playerManager *PlayerManager
-
-// WebSocket upgrader
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+const addr = "0.0.0.0:3010" // The address of the WebSocket server
 
 func main() {
 	log.Println("Starting server...")
@@ -40,28 +26,34 @@ func main() {
 	verifyEnvVars()
 
 	// Init Postgres pool
-	pgPool = createPostgresPool()
+	pg := createPostgresPool()
 	log.Println("Created the Postgres pool")
 
 	// Init Redis client
-	rdb = createRedisClient()
+	rdb := createRedisClient()
 	log.Println("Created the Redis client")
 
 	// WebSocket server
-	server = CreateServer()
+	server := CreateServer()
 
-	go handleIncomingData()
+	go handleIncomingData(server)
 
-	// Player manager
-	playerManager = CreatePlayerManager()
+	userManager := CreateUserManager()
 
 	// HTTP server
-	runHTTPServer()
+	runHTTPServer(server, rdb, pg, userManager)
 }
 
-func runHTTPServer() {
+func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool, um *UserManager) {
 	log.Println("Server address -", addr)
 
+	// WebSocket upgrader
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	// Health check and 404 handler
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			if r.URL.String() == "/" {
@@ -74,77 +66,79 @@ func runHTTPServer() {
 		}
 	})
 
-	http.HandleFunc("/ws", upgradeHandler)
+	// WebSocket upgrade handler
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		auth := r.Header.Get("authorization")
+
+		userID, err := verifyLogin(auth, server, rdb)
+		if err != nil {
+			log.Printf("upgrade WebSocket error for user %d: %v\n", userID, err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Upgrade the connection
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Printf("upgrade WebSocket error for user %d: %v\n", userID, err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Fetch user's data
+		user, err := queryUserData(userID, pg)
+		if err != nil {
+			log.Printf("upgrade WebSocket error for user %d: %v\n", userID, err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Register user data with user manager
+		um.Register(user)
+
+		// Create WebSocket client
+		client := CreateClient(userID, conn)
+		go client.WritePump()
+		go client.ReadPump(server)
+
+		// Register client with server
+		server.Register(client)
+
+		log.Println("User", userID, "has logged in")
+	})
 
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Println("Run HTTP server error:", err)
 	}
 }
 
-// Handles upgrading of WebSocket requests.
-func upgradeHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s/ws", addr)
-
-	auth := r.Header.Get("authorization")
+// Error can be returned if user is already logged in, auth details are invalid, or if there is an issue with the Redis server.
+// User ID will be returned if no error is encountered.
+func verifyLogin(auth string, server *Server, rdb *redis.Client) (int64, error) {
+	// Parse authentication string
 	id, token, err := parseAuthorization(auth)
 	if err != nil {
-		log.Println("Invalid authorization header:", auth)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+		return id, errors.New("invalid authorization header")
 	}
 
-	log.Println("User", id, "is attempting to login")
-
-	// Check if player is already connected
-	isOnline := server.PlayerOnline(id)
-	if isOnline {
-		log.Println("User", id, "login failed since user is already online")
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	// Verify the authentication token
+	// Verify the authentication details
 	isAuthorized, err := checkAuth(rdb, id, token)
 	if err != nil {
-		log.Println("Check auth failed:", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+		return id, err
 	} else if !isAuthorized {
-		log.Println("Auth token is not valid:", token)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
+		return id, errors.New("auth token is not valid")
 	}
 
-	// Create the player structure
-	player := Player{ID: id}
-
-	// If player data is present, clear the destination, else query the player data and register the player
-	if !playerManager.HasPlayer(player.ID) {
-		err = pgPool.QueryRow(context.Background(), "SELECT name FROM users WHERE id = $1", id).Scan(&player.Name)
-		if err != nil {
-			log.Println("Failed to query the users table:", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		playerManager.Register(&player)
+	// Check if user client is already connected
+	isOnline := server.IsUserOnline(id)
+	if isOnline {
+		return id, errors.New("User is already connected")
 	}
 
-	// Upgrade the connection
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println("Failed to upgrade the connection:", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Create WebSocket client
-	client := CreateClient(player.ID, conn)
-	server.Register(client)
-	go client.WritePump()
-	go client.ReadPump(server)
+	return id, nil
 }
 
-func handleIncomingData() {
+func handleIncomingData(server *Server) {
 	for {
 		data := <-server.Incoming
 		fmt.Printf("Received message %s", data)

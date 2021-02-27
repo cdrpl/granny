@@ -15,7 +15,7 @@ const (
 	maxMessageSize = 512                 // maximum message size from clients
 )
 
-// Client represents a player's WebSocket connection.
+// Client represents a user's WebSocket connection.
 type Client struct {
 	id   int64
 	conn *websocket.Conn
