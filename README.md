@@ -30,3 +30,11 @@ Granny can be thought of as being split into 3 parts.
 The Granny backend can be easily setup with Docker Compose. Just install Docker and run the following command.
 
 - `docker-compose up -d`
+
+### Project Setup
+
+In order to run the client you will need Unity. The client needs access to the API and server, you can use Docker compose to run the backend services.
+
+1. Install Unity3D and Docker
+2. Run the backend services with the command `docker-compose up -d`
+3. Open the client folder with Unity3D
