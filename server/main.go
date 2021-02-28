@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -35,16 +36,13 @@ func main() {
 
 	// WebSocket server
 	server := CreateServer()
-
-	go handleIncomingData(server)
-
-	userManager := CreateUserManager()
+	go server.run()
 
 	// HTTP server
-	runHTTPServer(server, rdb, pg, userManager)
+	runHTTPServer(server, rdb, pg)
 }
 
-func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool, um *UserManager) {
+func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool) {
 	log.Println("Server address -", addr)
 
 	// WebSocket upgrader
@@ -56,9 +54,23 @@ func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool, um *User
 	// Health check and 404 handler
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			if r.URL.String() == "/" {
+			switch r.URL.String() {
+			case "/":
 				fmt.Fprint(w, "OK")
-			} else {
+				break
+
+			case "/room":
+				js, err := json.Marshal(server.getRoom())
+				if err != nil {
+					fmt.Println(err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					break
+				}
+
+				fmt.Fprint(w, string(js))
+				break
+
+			default:
 				http.Error(w, "Not Found", http.StatusNotFound)
 			}
 		} else {
@@ -93,16 +105,13 @@ func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool, um *User
 			return
 		}
 
-		// Register user data with user manager
-		um.Register(user)
-
 		// Create WebSocket client
 		client := CreateClient(userID, conn)
 		go client.WritePump()
 		go client.ReadPump(server)
 
-		// Register client with server
-		server.Register(client)
+		// Register client and user with the server
+		server.Register(client, user)
 
 		log.Println("User", userID, "has logged in")
 	})
@@ -136,11 +145,4 @@ func verifyLogin(auth string, server *Server, rdb *redis.Client) (int64, error) 
 	}
 
 	return id, nil
-}
-
-func handleIncomingData(server *Server) {
-	for {
-		data := <-server.Incoming
-		fmt.Printf("Received message %s", data)
-	}
 }

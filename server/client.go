@@ -61,8 +61,16 @@ func (c *Client) ReadPump(server *Server) {
 			break
 		}
 
-		// transfer message to incoming
-		server.Incoming <- data
+		if len(data) == 0 {
+			fmt.Println("Received empty message from user", c.id)
+			return
+		}
+
+		// Create the message
+		message := Message{client: c, data: data}
+
+		// Send message to incoming
+		server.Incoming <- message
 	}
 }
 
