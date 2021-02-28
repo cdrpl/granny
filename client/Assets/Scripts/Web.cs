@@ -54,12 +54,30 @@ namespace Idlemon
             return new ApiResponse(body, response.StatusCode);
         }
 
+        public static async Task<string> GetRoom()
+        {
+            string url = ServerUrl("/room");
+
+            HttpResponseMessage response = await Client.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            string body = await response.Content.ReadAsStringAsync();
+
+            LogResponse(url, body, response.StatusCode);
+
+            return body;
+        }
+
         /// <summary>
         /// Returns the full URL including the path for the public API.
         /// </summary>
         public static string ApiUrl(string path)
         {
             return Const.WEB_PROTOCOL + "://" + Const.API_ADDR + path;
+        }
+
+        static string ServerUrl(string path)
+        {
+            return Const.WEB_PROTOCOL + "://" + Const.SERVER_ADDR + path;
         }
 
         static void LogResponse(string path, string body, HttpStatusCode statusCode)
