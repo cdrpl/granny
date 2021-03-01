@@ -61,16 +61,20 @@ func (c *Client) ReadPump(server *Server) {
 			break
 		}
 
+		// Message must be at least 1 byte in size
 		if len(data) == 0 {
 			fmt.Println("Received empty message from user", c.id)
 			return
 		}
 
-		// Create the message
-		message := Message{client: c, data: data}
+		// Verify message channel
+		if int(data[0]) > End {
+			fmt.Println("Received message on an invalid channel:", int(data[0]))
+			return
+		}
 
 		// Send message to incoming
-		server.Incoming <- message
+		server.Incoming <- newMessage(data, c)
 	}
 }
 

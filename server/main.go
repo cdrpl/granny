@@ -57,7 +57,11 @@ func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool) {
 				break
 
 			case "/room":
-				js, err := json.Marshal(server.getRoom())
+				server.roomMut.Lock()
+				room := server.room
+				server.roomMut.Unlock()
+
+				js, err := json.Marshal(room)
 				if err != nil {
 					fmt.Println(err)
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
