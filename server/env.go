@@ -2,33 +2,20 @@ package main
 
 import (
 	"bufio"
-	"io"
 	"log"
 	"os"
 	"strings"
 )
 
-// loadEnvVars will attempt to open the .env or .env.defaults file and set the env vars.
-// Returns the name of the file that the env vars were loaded from.
-func loadEnvVars() string {
+// loadEnvVars will attempt to open the .env file and set the env vars.
+func loadEnvVars() error {
 	file, err := os.Open(".env")
-	if err == nil {
-		parseEnvFile(file)
-		return ".env"
+	if err != nil {
+		return err
 	}
+	defer file.Close()
 
-	// .env file couldn't be opened, attempt to load .env.defaults
-	file, err = os.Open(".env.defaults")
-	if err == nil {
-		parseEnvFile(file)
-		return ".env.defaults"
-	}
-
-	return ""
-}
-
-// parseEnvFile will scan the file and load the values into os.Environ. Values are split by line in key=value format.
-func parseEnvFile(file io.Reader) {
+	// Parse env file
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		split := strings.Split(scanner.Text(), "=")
@@ -36,9 +23,12 @@ func parseEnvFile(file io.Reader) {
 			os.Setenv(split[0], split[1])
 		}
 	}
+
 	if err := scanner.Err(); err != nil {
-		log.Println("env.Parse() scanner error:", err)
+		return err
 	}
+
+	return nil
 }
 
 // verifyEnvVars will set env vars that haven't been set to default values.

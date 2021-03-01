@@ -18,11 +18,8 @@ func main() {
 	log.Println("Starting server...")
 
 	// Environment variables
-	filename := loadEnvVars()
-	if filename == "" {
-		log.Println("Could not open the .env or .env.defaults file")
-	} else {
-		log.Println("Loaded env vars from", filename)
+	if err := loadEnvVars(); err != nil {
+		log.Println(err)
 	}
 	verifyEnvVars()
 
