@@ -57,9 +57,7 @@ func runHTTPServer(server *Server, rdb *redis.Client, pg *pgxpool.Pool) {
 				break
 
 			case "/room":
-				server.roomMut.Lock()
-				room := server.room
-				server.roomMut.Unlock()
+				room := server.getRoom()
 
 				js, err := json.Marshal(room)
 				if err != nil {

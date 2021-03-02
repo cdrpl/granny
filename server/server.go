@@ -19,6 +19,12 @@ type Room struct {
 	Users []User `json:"users"`
 }
 
+func newRoom() Room {
+	return Room{
+		Users: make([]User, 0),
+	}
+}
+
 func (r *Room) addUser(user User) {
 	r.Users = append(r.Users, user)
 }
@@ -38,13 +44,11 @@ func (r *Room) hasUser(id int64) bool {
 
 // Server tracks the clients
 type Server struct {
-	clients    map[int64]*Client
-	clientsMut sync.Mutex
-	users      map[int64]User
-	usersMut   sync.Mutex
-	room       Room
-	roomMut    sync.Mutex
-	Incoming   chan Message // Incoming data is sent to this channel.
+	clients  map[int64]*Client
+	users    map[int64]User
+	room     Room
+	Incoming chan Message // Incoming data is sent to this channel.
+	mut      sync.Mutex
 }
 
 // CreateServer will return a Server instance.
@@ -52,27 +56,24 @@ func CreateServer() *Server {
 	return &Server{
 		clients:  make(map[int64]*Client),
 		users:    make(map[int64]User),
-		room:     Room{Users: make([]User, 0)},
+		room:     newRoom(),
 		Incoming: make(chan Message),
 	}
 }
 
 // Register adds the client to the server's client map.
 func (s *Server) Register(client *Client, user User) {
-	s.clientsMut.Lock()
-	s.usersMut.Lock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	s.clients[client.id] = client
 	s.users[user.ID] = user
-
-	s.clientsMut.Unlock()
-	s.usersMut.Unlock()
 }
 
 // Unregister removes the client from the server's client map.
 func (s *Server) Unregister(client *Client) {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	if _, ok := s.clients[client.id]; ok {
 		log.Printf("User '%v' disconnected\n", client.id)
@@ -94,8 +95,8 @@ func (s *Server) broadcast(data []byte, client *Client) {
 
 // Broadcast will send the message to the given targets.
 func (s *Server) Broadcast(data []byte, targets []int64) {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	for _, id := range targets {
 		if client, ok := s.clients[id]; ok {
@@ -106,8 +107,8 @@ func (s *Server) Broadcast(data []byte, targets []int64) {
 
 // BroadcastSingle will send the message to the specified client.
 func (s *Server) BroadcastSingle(data []byte, target int64) {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	if client, ok := s.clients[target]; ok {
 		s.broadcast(data, client)
@@ -116,8 +117,8 @@ func (s *Server) BroadcastSingle(data []byte, target int64) {
 
 // BroadcastAll will send the message to all clients.
 func (s *Server) BroadcastAll(data []byte) {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	for _, client := range s.clients {
 		s.broadcast(data, client)
@@ -126,8 +127,8 @@ func (s *Server) BroadcastAll(data []byte) {
 
 // BroadcastAllExclude will broadcast the message to every client except the specified one.
 func (s *Server) BroadcastAllExclude(data []byte, exclude int64) {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	for id, client := range s.clients {
 		if id == exclude {
@@ -140,11 +141,18 @@ func (s *Server) BroadcastAllExclude(data []byte, exclude int64) {
 // IsUserOnline will return true if the user has an active connection.
 // Can be safely called from other goroutines.
 func (s *Server) IsUserOnline(id int64) bool {
-	s.clientsMut.Lock()
-	defer s.clientsMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	_, isOnline := s.clients[id]
 	return isOnline
+}
+
+func (s *Server) getRoom() Room {
+	s.mut.Lock()
+	defer s.mut.Unlock()
+
+	return s.room
 }
 
 func (s *Server) run() {
@@ -164,10 +172,8 @@ func (s *Server) run() {
 
 // True will be returned if the user was added to the room.
 func (s *Server) joinRoomHandler(userID int64) {
-	s.usersMut.Lock()
-	s.roomMut.Lock()
-	defer s.usersMut.Unlock()
-	defer s.roomMut.Unlock()
+	s.mut.Lock()
+	defer s.mut.Unlock()
 
 	roomIsFull := s.room.isFull()
 	if roomIsFull {
