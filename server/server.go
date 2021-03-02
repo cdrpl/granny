@@ -40,7 +40,7 @@ func (r *Room) hasUser(id int64) bool {
 type Server struct {
 	clients    map[int64]*Client
 	clientsMut sync.Mutex
-	users      map[int64]*User
+	users      map[int64]User
 	usersMut   sync.Mutex
 	room       Room
 	roomMut    sync.Mutex
@@ -51,14 +51,14 @@ type Server struct {
 func CreateServer() *Server {
 	return &Server{
 		clients:  make(map[int64]*Client),
-		users:    make(map[int64]*User),
+		users:    make(map[int64]User),
 		room:     Room{Users: make([]User, 0)},
 		Incoming: make(chan Message),
 	}
 }
 
 // Register adds the client to the server's client map.
-func (s *Server) Register(client *Client, user *User) {
+func (s *Server) Register(client *Client, user User) {
 	s.clientsMut.Lock()
 	s.usersMut.Lock()
 
@@ -176,7 +176,7 @@ func (s *Server) joinRoomHandler(userID int64) {
 
 	if user, ok := s.users[userID]; ok {
 		if !s.room.hasUser(user.ID) {
-			s.room.addUser(*user)
+			s.room.addUser(user)
 		}
 	}
 }

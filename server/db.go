@@ -56,8 +56,8 @@ func dbConfig() (host, user, pass string) {
 }
 
 // Query the database for the user's data.
-func queryUserData(id int64, pg *pgxpool.Pool) (*User, error) {
-	user := &User{ID: id}
+func queryUserData(id int64, pg *pgxpool.Pool) (User, error) {
+	user := User{ID: id}
 
 	err := pg.QueryRow(context.Background(), "SELECT name FROM users WHERE id = $1", id).Scan(&user.Name)
 	if err != nil {
