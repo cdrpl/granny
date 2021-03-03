@@ -9,11 +9,6 @@ Granny is made up of a client and a server.
 - [Client](/client) - Made with Unity3D
 - [Server](/server) - Written in Go
 
-### Languages
-
-- C#
-- Go
-
 ### Technologies
 
 - Docker
