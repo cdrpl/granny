@@ -4,7 +4,7 @@ using System.Collections;
 
 namespace Idlemon.Ui
 {
-    public class HttpLoadingLabel : MonoBehaviour
+    public class LoadingLabel : MonoBehaviour
     {
         Text label;
 

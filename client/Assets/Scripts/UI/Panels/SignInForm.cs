@@ -14,7 +14,6 @@ namespace Idlemon.Ui
         public Toggle rememberMe;
         public Button signInBtn;
         public FlashMessage flashMessage;
-        public HttpLoadingPanel loadingPanel;
 
         void Start()
         {
@@ -69,7 +68,7 @@ namespace Idlemon.Ui
             // Send the HTTP request
             try
             {
-                loadingPanel.Show();
+                LoadingPanel.instance.Show();
 
                 var response = await Auth.SignIn(email.text, password.text, rememberMe.isOn);
 
@@ -89,7 +88,7 @@ namespace Idlemon.Ui
             }
             finally
             {
-                loadingPanel.Hide();
+                LoadingPanel.instance.Hide();
             }
         }
     }

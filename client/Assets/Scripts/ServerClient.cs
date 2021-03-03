@@ -6,6 +6,11 @@ namespace Idlemon
 {
     public class ServerClient : MonoBehaviour
     {
+        enum Channel
+        {
+            JoinRoom
+        }
+
         WebSocket websocket;
 
         void Start()
@@ -52,8 +57,18 @@ namespace Idlemon
             await websocket.Connect();
         }
 
-        void Update()
+        async void Update()
         {
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                await websocket.Send(new byte[] { (byte)Channel.JoinRoom });
+            }
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                string res = await Web.GetRoom();
+                Debug.Log(res);
+            }
+
 #if !UNITY_WEBGL || UNITY_EDITOR
             if (websocket != null)
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using Grpc.Core;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -12,12 +11,20 @@ namespace Idlemon.Ui
         public InputField username, email, password, password2;
         public Button signUpBtn;
         public FlashMessage flashMessage;
-        public HttpLoadingPanel loadingPanel;
+
+        Channel channel;
+        Proto.Auth.AuthClient client;
 
         /// <summary>
         /// Triggered on user sign up success.
         /// </summary>
         public UnityEvent OnSignUpSuccess;
+
+        void Awake()
+        {
+            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
+            client = new Proto.Auth.AuthClient(channel);
+        }
 
         void Start()
         {
@@ -91,32 +98,21 @@ namespace Idlemon.Ui
                 return;
             }
 
-            // Send http request
             try
             {
-                loadingPanel.Show();
-
-                var response = await Web.SignUp(username.text, email.text, password.text);
-
-                if (response.HasError)
-                {
-                    flashMessage.Flash(response.Error.Message);
-                }
-                else
-                {
-                    flashMessage.Flash("Account created!");
-                    ClearInputs();
-                    OnSignUpSuccess.Invoke();
-                }
+                LoadingPanel.instance.Show();
+                await client.SignUpAsync(new Proto.SignUpRequest { Email = email.text, Name = username.text, Pass = password.text });
+                flashMessage.Flash("Sign up successful");
+                ClearInputs();
+                OnSignUpSuccess.Invoke();
             }
-            catch (Exception e)
+            catch (RpcException e) when (e.StatusCode == StatusCode.AlreadyExists)
             {
-                Debug.LogError(e, this);
-                flashMessage.Flash("An error has occured, check your internet connection");
+                flashMessage.Flash(e.Status.Detail);
             }
             finally
             {
-                loadingPanel.Hide();
+                LoadingPanel.instance.Hide();
             }
         }
 

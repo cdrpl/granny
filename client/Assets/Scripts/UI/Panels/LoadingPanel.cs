@@ -5,18 +5,21 @@ using System.Collections;
 namespace Idlemon.Ui
 {
     /// <summary>
-    /// Controls the panel that appears when an http request is waiting for a response.
+    /// Controls the panel that appears when a network request is waiting for a response.
     /// </summary>
-    public class HttpLoadingPanel : MonoBehaviour
+    public class LoadingPanel : MonoBehaviour
     {
-        public static HttpLoadingPanel instance { get; private set; }
+        public static LoadingPanel instance { get; private set; }
 
         public float loadingImageDelay = 0.75f; // delay in seconds before showing the loading image
         public float timeout = 10f; // disable the panel if timeout has been reached
 
         void Awake()
         {
-            instance = this;
+            if (instance == null)
+            {
+                instance = this;
+            }
         }
 
         public void Show()

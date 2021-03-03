@@ -16,8 +16,8 @@
         public const string API_ADDR = "127.0.0.1:3000";
 
         /// <summary>
-        /// The address of the lobby server.
+        /// The address of the server.
         /// </summary>
-        public const string SERVER_ADDR = "127.0.0.1:3010";
+        public const string SERVER_ADDR = "127.0.0.1:3000";
     }
 }
