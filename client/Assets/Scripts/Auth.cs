@@ -19,9 +19,9 @@ namespace Idlemon
         /// Will return true if successfully signed in.
         /// </summary>
         /// <returns></returns>
-        public async static Task<ApiResponse> SignIn(string email, string password, bool rememberMe)
+        public static void SignIn(string email, string password, bool rememberMe)
         {
-            var response = await Web.SignIn(email, password);
+            /*var response = await Web.SignIn(email, password);
 
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -32,9 +32,7 @@ namespace Idlemon
                 // Set the Authorization header for the HTTP Client.
                 string authorization = Global.User.Id.ToString() + ":" + Global.User.Token;
                 Web.Client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorization);
-            }
-
-            return response;
+            }*/
         }
 
         static void UpdatePlayerPrefs(string email, string password, bool rememberMe)

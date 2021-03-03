@@ -1,4 +1,4 @@
-﻿using Idlemon.Data;
+﻿using Grpc.Core;
 using System;
 using System.Net;
 using UnityEngine;
@@ -51,7 +51,7 @@ namespace Idlemon.Ui
         /// <summary>
         /// Triggered when the sign in button is clicked.
         /// </summary>
-        public async void OnBtnClick()
+        public void OnBtnClick()
         {
             // validate the form inputs
             if (email.text.Length < 2)
@@ -66,7 +66,7 @@ namespace Idlemon.Ui
             }
 
             // Send the HTTP request
-            try
+            /*try
             {
                 LoadingPanel.instance.Show();
 
@@ -89,7 +89,7 @@ namespace Idlemon.Ui
             finally
             {
                 LoadingPanel.instance.Hide();
-            }
+            }*/
         }
     }
 }

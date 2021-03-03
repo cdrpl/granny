@@ -57,7 +57,7 @@ namespace Idlemon.Ui
         /// <summary>
         /// Attach the message to the UI.
         /// </summary>
-        public void AttachMessage(ChatMessage chatMessage)
+        /*public void AttachMessage(ChatMessage chatMessage)
         {
             // instantiate item
             Transform item = Instantiate<GameObject>(scrollItem).transform;
@@ -66,6 +66,6 @@ namespace Idlemon.Ui
 
             // update item ui
             item.GetComponent<ChatMessageScrollItem>().Draw(chatMessage);
-        }
+        }*/
     }
 }

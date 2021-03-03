@@ -11,9 +11,9 @@ namespace Idlemon.Ui
     {
         public Text label;
 
-        public void Draw(ChatMessage chatMessage)
+        /*public void Draw()
         {
             label.text = chatMessage.Name + ": " + chatMessage.Message;
-        }
+        }*/
     }
 }
