@@ -24,3 +24,7 @@ The server can be run in a Docker container. The container will need access to a
 
 1. Build image - `docker build -t server .`
 2. Run container - `docker run -itd --env-file .env --restart always --network host --name server server`
+
+### Command Line Arguments
+
+- -e - this will prevent the .env file from being loaded.

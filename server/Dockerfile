@@ -16,4 +16,4 @@ EXPOSE 3000
 
 # Copy bin to new image
 COPY --from=build /go/bin /go/bin
-ENTRYPOINT [ "/go/bin/server" ]
+ENTRYPOINT [ "/go/bin/server", "-e" ]

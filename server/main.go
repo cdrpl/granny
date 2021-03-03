@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 )
 
@@ -9,12 +10,12 @@ const port = ":3000" // Port for the GRPC server
 func main() {
 	log.Println("Starting server")
 
-	// Load env variables
-	if err := loadEnvVars(); err != nil {
-		log.Println(err)
+	// Env vars
+	if flags() == false {
+		if err := loadEnvVars(); err != nil {
+			log.Println(err)
+		}
 	}
-
-	// Verify env vars are set
 	verifyEnvVars()
 
 	// Init Postgres pool
@@ -29,4 +30,10 @@ func main() {
 	log.Printf("0.0.0.0%v\n", port)
 	server := createServer(pg, rdb)
 	server.run()
+}
+
+func flags() bool {
+	e := flag.Bool("e", false, ".env file will not be loaded if flag is given")
+	flag.Parse()
+	return *e
 }
