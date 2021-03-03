@@ -6,8 +6,8 @@ Granny is an open source online game. Network communication is achieved with gRP
 
 Granny is made up of a client and a server.
 
-- [Client](/client) - This is the game client. Made with Unity3D.
-- [Server](/server) - This is the game server. Written in Go.
+- [Client](/client) - Made with Unity3D
+- [Server](/server) - Written in Go
 
 ### Languages
 
