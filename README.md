@@ -1,40 +1,33 @@
 # Granny
 
-Granny is an open source online game. Network communication is achieved through HTTP and WebSockets.
+Granny is an open source online game. Network communication is achieved with gRPC.
 
 ### Overview
 
-Granny can be thought of as being split into 3 parts.
+Granny is made up of a client and a server.
 
-- [API](/api) - This is an API that exposes HTTP routes and responds with data in JSON format. Written in TypeScript and ran with Node.js
-- [Client](/client) - This is the game client responsible for displaying the game to players as well as receiving input from them. Made with Unity3D.
-- [Server](/server) - This is a WebSocket server that handles the realtime backend functionality. Written in Go.
+- [Client](/client) - This is the game client. Made with Unity3D.
+- [Server](/server) - This is the game server. Written in Go.
 
 ### Languages
 
 - C#
 - Go
-- TypeScript
 
 ### Technologies
 
 - Docker
+- gRPC
 - NGINX
-- Node.js
 - PostgreSQL
 - Redis
 - Unity3D
 
-### Docker Compose
-
-The Granny backend can be easily setup with Docker Compose. Just install Docker and run the following command.
-
-- `docker-compose up -d`
-
 ### Project Setup
 
-In order to run the client you will need Unity. The client needs access to the API and server, you can use Docker compose to run the backend services.
+In order to run the client you will need Unity and a running instance of the server.
 
 1. Install Unity3D and Docker
-2. Run the backend services with the command `docker-compose up -d`
+2. Run the server with the command `docker-compose up`
 3. Open the client folder with Unity3D
+4. In Unity, open the Sign In scene and press Play.

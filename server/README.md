@@ -1,6 +1,6 @@
 # Server
 
-The server handles realtime functionality and network communication is achieved through WebSockets.
+This is the game server.
 
 ### Dependencies
 
@@ -20,7 +20,7 @@ Env vars will be loaded from the .env file if present. Env vars loaded from the 
 
 ### Run with Docker
 
-The server can be run as a Docker container. The container will need access to a Redis and Postgres server, the addresses can be set by using a .env file and passing it to the docker run command. Note that `--network host` is not supported on windows, port 3010 needs to be exposed by replacing `--network host` in the run command with `-p 3010:3010`
+The server can be run in a Docker container. The container will need access to a Redis and Postgres server, the addresses can be set by using a .env file and passing it to the docker run command.
 
 1. Build image - `docker build -t server .`
 2. Run container - `docker run -itd --env-file .env --restart always --network host --name server server`

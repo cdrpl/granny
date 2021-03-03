@@ -1,12 +1,12 @@
-upstream api {
+upstream server {
 	server 127.0.0.1:3000;
 }
 
 server {
-	server_name api_proxy;
+	server_name server_proxy;
 	listen 0.0.0.0:4000;
 
 	location / {
-		proxy_pass http://api;
+		proxy_pass http://server;
 	}
 }

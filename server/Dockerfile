@@ -12,7 +12,7 @@ FROM alpine
 WORKDIR /go/src/github.com/cdrpl/granny/server
 
 # Expose port
-EXPOSE 3010
+EXPOSE 3000
 
 # Copy bin to new image
 COPY --from=build /go/bin /go/bin
