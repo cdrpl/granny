@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -58,6 +59,39 @@ func dbConfig() (host, user, pass string) {
 	return
 }
 
+// Build the database
+func dbUp(pg *pgxpool.Pool) error {
+	items, err := ioutil.ReadDir(migrationDir)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		// Open the file
+		filePath := fmt.Sprintf("%s/%s", migrationDir, item.Name())
+		file, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		// Read the file
+		bytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			return err
+		}
+
+		// Execute the SQL
+		sql := string(bytes)
+		_, err = pg.Exec(context.Background(), sql)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Query the database for the user's data.
 func queryUserData(id int64, pg *pgxpool.Pool) (User, error) {
 	user := User{ID: id}
@@ -97,7 +131,7 @@ func userEmailExists(email string, pg *pgxpool.Pool) (bool, error) {
 }
 
 func insertUser(user User, pg *pgxpool.Pool) error {
-	sql := "INSERT INTO users (name, email, pass) VALUES ($1, $2, $3)"
-	_, err := pg.Exec(context.Background(), sql, user.Name, user.Email, user.Pass)
+	sql := "INSERT INTO users (name, email, pass, created_at) VALUES ($1, $2, $3, $4)"
+	_, err := pg.Exec(context.Background(), sql, user.Name, user.Email, user.Pass, user.CreatedAt)
 	return err
 }

@@ -14,6 +14,9 @@ WORKDIR /go/src/github.com/cdrpl/granny/server
 # Expose port
 EXPOSE 3000
 
+# Copy migrations
+COPY --from=build /go/src/github.com/cdrpl/granny/server/db /go/src/github.com/cdrpl/granny/server/db
+
 # Copy bin to new image
 COPY --from=build /go/bin /go/bin
 ENTRYPOINT [ "/go/bin/server", "-e" ]

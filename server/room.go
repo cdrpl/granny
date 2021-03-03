@@ -2,8 +2,6 @@ package main
 
 import "errors"
 
-const roomSize = 5 // Max number of users allowed in a room
-
 // Room represents a game room.
 type Room struct {
 	Users []User `json:"users"`

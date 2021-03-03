@@ -5,7 +5,11 @@ import (
 	"log"
 )
 
-const port = ":3000" // Port for the GRPC server
+const (
+	port         = ":3000" // Port for the GRPC server
+	migrationDir = "./db"  // Directory that holds the SQL files
+	roomSize     = 5       // Max users in a room
+)
 
 func main() {
 	log.Println("Starting server")
@@ -21,6 +25,11 @@ func main() {
 	// Init Postgres pool
 	pg := createPostgresPool()
 	log.Println("Postgres connected")
+
+	// Construct tables
+	if err := dbUp(pg); err != nil {
+		log.Fatal("db migrations error: ", err)
+	}
 
 	// Init Redis client
 	rdb := createRedisClient()

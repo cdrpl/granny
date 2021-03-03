@@ -23,7 +23,7 @@ Env vars will be loaded from the .env file if present. Env vars loaded from the 
 The server can be run in a Docker container. The container will need access to a Redis and Postgres server, the addresses can be set by using a .env file and passing it to the docker run command.
 
 1. Build image - `docker build -t server .`
-2. Run container - `docker run -itd --env-file .env --restart always --network host --name server server`
+2. Run container - `docker run -itd --env-file .env --restart always --name server -p 3000:3000 server`
 
 ### Command Line Arguments
 

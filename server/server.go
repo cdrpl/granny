@@ -54,7 +54,7 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	}
 
 	// Create user struct
-	user := User{Name: name, Email: email, Pass: string(hash)}
+	user := createUser(name, email, string(hash))
 
 	// Insert user
 	if err := insertUser(user, s.pg); err != nil {
