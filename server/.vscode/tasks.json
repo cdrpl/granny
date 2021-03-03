@@ -8,10 +8,23 @@
       "detail": "Run the Server",
       "type": "shell",
       "command": "go run .",
-      "group": {
-        "isDefault": true,
-        "kind": "build"
-      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Protoc",
+      "detail": "Compile Protocol Buffers",
+      "type": "shell",
+      "command": "protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/granny.proto",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Protoc C#",
+      "detail": "Compile Protocol Buffers C#",
+      "type": "shell",
+      "command": "protoc -I proto/ --csharp_out=../client/Assets/Scripts/Grpc --grpc_out=../client/Assets/Scripts/Grpc --plugin=protoc-gen-grpc=proto/grpc_csharp_plugin.exe granny.proto",
+      "group": "build",
       "problemMatcher": []
     }
   ]

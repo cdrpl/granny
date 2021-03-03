@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/cdrpl/granny/server/proto";
+
+package proto;
+
+service Auth {
+  rpc SignUp (SignUpRequest) returns (SignUpResponse) {}
+}
+
+message SignUpRequest {
+  string name = 1;
+  string email = 2;
+  string pass = 3;
+}
+
+message SignUpResponse {}

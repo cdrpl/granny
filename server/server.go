@@ -1,188 +1,80 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"sync"
+	"net"
+
+	"github.com/cdrpl/granny/server/proto"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
-const roomSize = 5 // Max number of users allowed in a room
-
-// User account data.
-type User struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-// Room represents a game room.
-type Room struct {
-	Users []User `json:"users"`
-}
-
-func newRoom() Room {
-	return Room{
-		Users: make([]User, 0),
-	}
-}
-
-func (r *Room) addUser(user User) {
-	r.Users = append(r.Users, user)
-}
-
-func (r *Room) isFull() bool {
-	return len(r.Users) >= roomSize
-}
-
-func (r *Room) hasUser(id int64) bool {
-	for _, user := range r.Users {
-		if user.ID == id {
-			return true
-		}
-	}
-	return false
-}
-
-// Server tracks the clients
+// Server handles GRPC requests.
 type Server struct {
-	clients  map[int64]*Client
-	users    map[int64]User
-	room     Room
-	Incoming chan Message // Incoming data is sent to this channel.
-	mut      sync.Mutex
+	pg *pgxpool.Pool
+	proto.UnimplementedAuthServer
 }
 
-// CreateServer will return a Server instance.
-func CreateServer() *Server {
-	return &Server{
-		clients:  make(map[int64]*Client),
-		users:    make(map[int64]User),
-		room:     newRoom(),
-		Incoming: make(chan Message),
+// Create new GRPC server.
+func createServer(pg *pgxpool.Pool) *Server {
+	return &Server{pg: pg}
+}
+
+// SignUp is used for new user registrations
+func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.SignUpResponse, error) {
+	name := in.GetName()
+	email := in.GetEmail()
+	pass := in.GetPass()
+
+	// Name must be unique
+	nameExists, err := userNameExists(name, s.pg)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, "query name error")
+	} else if nameExists {
+		return nil, grpc.Errorf(codes.AlreadyExists, "name already exists")
 	}
-}
 
-// Register adds the client to the server's client map.
-func (s *Server) Register(client *Client, user User) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	s.clients[client.id] = client
-	s.users[user.ID] = user
-}
-
-// Unregister removes the client from the server's client map.
-func (s *Server) Unregister(client *Client) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	if _, ok := s.clients[client.id]; ok {
-		log.Printf("User '%v' disconnected\n", client.id)
-		delete(s.clients, client.id)
-		close(client.send)
+	// Email must be unique
+	emailExists, err := userEmailExists(email, s.pg)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, "query email error")
+	} else if emailExists {
+		return nil, grpc.Errorf(codes.AlreadyExists, "email already exists")
 	}
-}
 
-// broadcast the message to the given client. Do not call this function without locking the server mutex.
-func (s *Server) broadcast(data []byte, client *Client) {
-	select {
-	case client.send <- data:
-
-	default: // assume the client is dead if the send channel is full
-		close(client.send)
-		delete(s.clients, client.id)
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Internal, "hash error")
 	}
-}
 
-// Broadcast will send the message to the given targets.
-func (s *Server) Broadcast(data []byte, targets []int64) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
+	// Create user struct
+	user := User{Name: name, Email: email, Pass: string(hash)}
 
-	for _, id := range targets {
-		if client, ok := s.clients[id]; ok {
-			s.broadcast(data, client)
-		}
+	// Insert user
+	if err := insertUser(user, s.pg); err != nil {
+		return nil, grpc.Errorf(codes.Internal, "insert user error")
 	}
+
+	log.Printf("New user registration: %v\n", user.Email)
+
+	return &proto.SignUpResponse{}, nil
 }
 
-// BroadcastSingle will send the message to the specified client.
-func (s *Server) BroadcastSingle(data []byte, target int64) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	if client, ok := s.clients[target]; ok {
-		s.broadcast(data, client)
-	}
-}
-
-// BroadcastAll will send the message to all clients.
-func (s *Server) BroadcastAll(data []byte) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	for _, client := range s.clients {
-		s.broadcast(data, client)
-	}
-}
-
-// BroadcastAllExclude will broadcast the message to every client except the specified one.
-func (s *Server) BroadcastAllExclude(data []byte, exclude int64) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	for id, client := range s.clients {
-		if id == exclude {
-			continue
-		}
-		s.broadcast(data, client)
-	}
-}
-
-// IsUserOnline will return true if the user has an active connection.
-// Can be safely called from other goroutines.
-func (s *Server) IsUserOnline(id int64) bool {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	_, isOnline := s.clients[id]
-	return isOnline
-}
-
-func (s *Server) getRoom() Room {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	return s.room
-}
-
+// Run the GRPC server.
 func (s *Server) run() {
-	for {
-		message := <-s.Incoming
-
-		switch message.channel {
-		case JoinRoom:
-			s.joinRoomHandler(message.client.id)
-			break
-
-		default:
-			fmt.Printf("Recv message invalid channel %d\n:", message.channel)
-		}
-	}
-}
-
-// True will be returned if the user was added to the room.
-func (s *Server) joinRoomHandler(userID int64) {
-	s.mut.Lock()
-	defer s.mut.Unlock()
-
-	roomIsFull := s.room.isFull()
-	if roomIsFull {
-		return
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
 	}
 
-	if user, ok := s.users[userID]; ok {
-		if !s.room.hasUser(user.ID) {
-			s.room.addUser(user)
-		}
+	grpcServer := grpc.NewServer()
+	proto.RegisterAuthServer(grpcServer, s)
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }

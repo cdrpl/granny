@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -65,4 +66,36 @@ func queryUserData(id int64, pg *pgxpool.Pool) (User, error) {
 	}
 
 	return user, nil
+}
+
+func userNameExists(name string, pg *pgxpool.Pool) (bool, error) {
+	var id int
+
+	err := pg.QueryRow(context.Background(), "SELECT id FROM users WHERE name = $1", name).Scan(&id)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func userEmailExists(email string, pg *pgxpool.Pool) (bool, error) {
+	var id int
+
+	err := pg.QueryRow(context.Background(), "SELECT id FROM users WHERE email = $1", email).Scan(&id)
+	if err == pgx.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func insertUser(user User, pg *pgxpool.Pool) error {
+	sql := "INSERT INTO users (name, email, pass) VALUES ($1, $2, $3)"
+	_, err := pg.Exec(context.Background(), sql, user.Name, user.Email, user.Pass)
+	return err
 }
