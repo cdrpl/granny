@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/cdrpl/granny/server/proto"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
@@ -14,13 +15,14 @@ import (
 
 // Server handles GRPC requests.
 type Server struct {
-	pg *pgxpool.Pool
+	pg  *pgxpool.Pool
+	rdb *redis.Client
 	proto.UnimplementedAuthServer
 }
 
 // Create new GRPC server.
-func createServer(pg *pgxpool.Pool) *Server {
-	return &Server{pg: pg}
+func createServer(pg *pgxpool.Pool, rdb *redis.Client) *Server {
+	return &Server{pg: pg, rdb: rdb}
 }
 
 // SignUp is used for new user registrations
@@ -59,7 +61,7 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 		return nil, grpc.Errorf(codes.Internal, "insert user error")
 	}
 
-	log.Printf("New user registration: %v\n", user.Email)
+	log.Printf("New user registration: {email:%v name:%v}\n", user.Email, user.Name)
 
 	return &proto.SignUpResponse{}, nil
 }

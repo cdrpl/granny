@@ -7,23 +7,26 @@ import (
 const port = ":3000" // Port for the GRPC server
 
 func main() {
-	log.Println("Starting server...")
+	log.Println("Starting server")
 
-	// Environment variables
+	// Load env variables
 	if err := loadEnvVars(); err != nil {
 		log.Println(err)
 	}
+
+	// Verify env vars are set
 	verifyEnvVars()
 
 	// Init Postgres pool
 	pg := createPostgresPool()
-	log.Println("Created the Postgres pool")
+	log.Println("Postgres connected")
 
 	// Init Redis client
-	//rdb := createRedisClient()
-	//log.Println("Created the Redis client")
+	rdb := createRedisClient()
+	log.Println("Redis connected")
 
 	// Run GRPC server
-	server := createServer(pg)
+	log.Printf("0.0.0.0%v\n", port)
+	server := createServer(pg, rdb)
 	server.run()
 }

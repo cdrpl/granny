@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4"
@@ -16,10 +17,11 @@ func createRedisClient() *redis.Client {
 	host := os.Getenv("REDIS_HOST")
 	redisAddr := fmt.Sprintf("%s:6379", host)
 	rdb := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+		Addr:        redisAddr,
+		DialTimeout: time.Millisecond * 500,
 	})
 
-	// test Redis connection
+	// Test Redis connection
 	_, err := rdb.Ping(context.Background()).Result()
 	if err != nil {
 		log.Fatalln("redis ping error:", err)
@@ -32,13 +34,13 @@ func createPostgresPool() *pgxpool.Pool {
 	host, user, pass := dbConfig()
 	dbURL := fmt.Sprintf("host=%s user=%s password=%s database=%s sslmode=disable", host, user, pass, user)
 
-	// connect the db pool
+	// Connect the db pool
 	dbPool, err := pgxpool.Connect(context.Background(), dbURL)
 	if err != nil {
 		log.Fatalln("Unable to connect to database:", err)
 	}
 
-	// test the connection
+	// Test the connection
 	_, err = dbPool.Exec(context.Background(), "SELECT 1")
 	if err != nil {
 		log.Fatalln("Database connection error:", err)
