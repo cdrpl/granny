@@ -106,7 +106,7 @@ namespace Idlemon.Ui
                 ClearInputs();
                 OnSignUpSuccess.Invoke();
             }
-            catch (RpcException e) when (e.StatusCode == StatusCode.AlreadyExists)
+            catch (RpcException e)
             {
                 flashMessage.Flash(e.Status.Detail);
             }

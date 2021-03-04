@@ -1,7 +1,3 @@
-using Idlemon.Data;
-using Newtonsoft.Json;
-using System.Net;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Idlemon
@@ -16,26 +12,9 @@ namespace Idlemon
         public static bool HasSavedCredentials => PlayerPrefs.HasKey(EMAIL_PREF_KEY);
 
         /// <summary>
-        /// Will return true if successfully signed in.
+        /// Update the player prefs used to store the remember me credentials.
         /// </summary>
-        /// <returns></returns>
-        public static void SignIn(string email, string password, bool rememberMe)
-        {
-            /*var response = await Web.SignIn(email, password);
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Global.User = JsonConvert.DeserializeObject<User>(response.Success.Data.ToString());
-
-                UpdatePlayerPrefs(email, password, rememberMe);
-
-                // Set the Authorization header for the HTTP Client.
-                string authorization = Global.User.Id.ToString() + ":" + Global.User.Token;
-                Web.Client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorization);
-            }*/
-        }
-
-        static void UpdatePlayerPrefs(string email, string password, bool rememberMe)
+        public static void UpdatePlayerPrefs(string email, string password, bool rememberMe)
         {
             if (rememberMe)
             {

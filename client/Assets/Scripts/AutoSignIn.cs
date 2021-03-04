@@ -1,4 +1,6 @@
-using System.Net;
+using Grpc.Core;
+using Idlemon.Data;
+using Idlemon.Ui;
 using UnityEngine;
 
 namespace Idlemon
@@ -8,23 +10,36 @@ namespace Idlemon
     /// </summary>
     public class AutoSignIn : MonoBehaviour
     {
-        void Awake()
+        public FlashMessage flashMessage;
+
+        Channel channel;
+        Proto.Auth.AuthClient client;
+
+        async void Awake()
         {
             if (Global.User != null)
             {
                 return;
             }
 
-            /*var response = await Auth.SignIn(Auth.SavedEmail, Auth.SavedPassword, true);
+            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
+            client = new Proto.Auth.AuthClient(channel);
 
-            if (response.StatusCode == HttpStatusCode.OK)
+            try
             {
-                Debug.Log("User has logged on: " + Global.User.Name);
+                LoadingPanel.instance.Show();
+                var response = await client.SignInAsync(new Proto.SignInRequest { Email = Auth.SavedEmail, Pass = Auth.SavedPassword });
+                Global.User = new User(response);
+                Debug.Log("User logged in: " + Auth.SavedEmail);
             }
-            else
+            catch (RpcException e)
             {
-                Debug.LogWarning("User login failed: " + response.Error.Message);
-            }*/
+                flashMessage.Flash(e.Status.Detail);
+            }
+            finally
+            {
+                LoadingPanel.instance.Hide();
+            }
         }
     }
 }

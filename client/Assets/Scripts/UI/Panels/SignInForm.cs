@@ -1,6 +1,5 @@
 ﻿using Grpc.Core;
-using System;
-using System.Net;
+using Idlemon.Data;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -14,6 +13,15 @@ namespace Idlemon.Ui
         public Toggle rememberMe;
         public Button signInBtn;
         public FlashMessage flashMessage;
+
+        Channel channel;
+        Proto.Auth.AuthClient client;
+
+        void Awake()
+        {
+            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
+            client = new Proto.Auth.AuthClient(channel);
+        }
 
         void Start()
         {
@@ -51,7 +59,7 @@ namespace Idlemon.Ui
         /// <summary>
         /// Triggered when the sign in button is clicked.
         /// </summary>
-        public void OnBtnClick()
+        public async void OnBtnClick()
         {
             // validate the form inputs
             if (email.text.Length < 2)
@@ -65,31 +73,23 @@ namespace Idlemon.Ui
                 return;
             }
 
-            // Send the HTTP request
-            /*try
+            LoadingPanel.instance.Show();
+
+            try
             {
-                LoadingPanel.instance.Show();
-
-                var response = await Auth.SignIn(email.text, password.text, rememberMe.isOn);
-
-                if (response.StatusCode == HttpStatusCode.OK)
-                {
-                    SceneManager.LoadScene("Overworld");
-                }
-                else
-                {
-                    flashMessage.Flash(response.Error.Message);
-                }
+                var response = await client.SignInAsync(new Proto.SignInRequest { Email = email.text, Pass = password.text });
+                Global.User = new User(response);
+                Auth.UpdatePlayerPrefs(email.text, password.text, rememberMe.isOn);
+                SceneManager.LoadScene("Overworld");
             }
-            catch (Exception e)
+            catch (RpcException e)
             {
-                Debug.LogError(e, this);
-                flashMessage.Flash("An error has occured, check your internet connection");
+                flashMessage.Flash(e.Status.Detail);
             }
             finally
             {
                 LoadingPanel.instance.Hide();
-            }*/
+            }
         }
     }
 }
