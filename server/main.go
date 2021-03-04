@@ -15,7 +15,7 @@ func main() {
 	log.Println("Starting server")
 
 	// Env vars
-	if flags() == false {
+	if !flags() {
 		if err := loadEnvVars(); err != nil {
 			log.Println(err)
 		}
