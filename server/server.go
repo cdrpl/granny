@@ -35,6 +35,7 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	email := in.GetEmail()
 	pass := in.GetPass()
 
+	// Input validation
 	err := validateSignUpRequest(in)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -80,11 +81,17 @@ func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.Si
 	email := in.GetEmail()
 	pass := in.GetPass()
 
+	// Input validation
+	err := validateSignInRequest(in)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	user := User{}
 
 	// Fetch user data
 	sql := "SELECT id, name, pass FROM users WHERE email = $1"
-	err := s.pg.QueryRow(context.Background(), sql, email).Scan(&user.ID, &user.Name, &user.Pass)
+	err = s.pg.QueryRow(context.Background(), sql, email).Scan(&user.ID, &user.Name, &user.Pass)
 	if err == pgx.ErrNoRows {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	} else if err != nil {
@@ -130,7 +137,7 @@ func (s *Server) run() {
 	}
 }
 
-// SignUpValidator is used to validate the sign up request.
+// SignUpValidator is used to validate sign up requests.
 type SignUpValidator struct {
 	Name  string `valid:"required,maxstringlength(16)"`
 	Email string `valid:"required,maxstringlength(255)"`
@@ -148,6 +155,25 @@ func validateSignUpRequest(req *proto.SignUpRequest) error {
 	}
 
 	v := SignUpValidator{Name: name, Email: email, Pass: req.Pass}
+	_, err = govalidator.ValidateStruct(v)
+	return err
+}
+
+// SignInValidator is used to validate sign in requests.
+type SignInValidator struct {
+	Email string `valid:"required,maxstringlength(255)"`
+	Pass  string `valid:"required,minstringlength(8),maxstringlength(255)"`
+}
+
+func validateSignInRequest(req *proto.SignInRequest) error {
+	email := govalidator.Trim(req.Email, "")
+
+	email, err := govalidator.NormalizeEmail(email)
+	if err != nil {
+		return err
+	}
+
+	v := SignInValidator{Email: email, Pass: req.Pass}
 	_, err = govalidator.ValidateStruct(v)
 	return err
 }
