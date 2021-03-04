@@ -31,10 +31,6 @@ func createServer(pg *pgxpool.Pool, rdb *redis.Client) *Server {
 
 // SignUp is used for new user registrations
 func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.SignUpResponse, error) {
-	name := in.GetName()
-	email := in.GetEmail()
-	pass := in.GetPass()
-
 	// Input validation
 	err := validateSignUpRequest(in)
 	if err != nil {
@@ -42,7 +38,7 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	}
 
 	// Name must be unique
-	nameExists, err := userNameExists(name, s.pg)
+	nameExists, err := userNameExists(in.Name, s.pg)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "query name error")
 	} else if nameExists {
@@ -50,7 +46,7 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	}
 
 	// Email must be unique
-	emailExists, err := userEmailExists(email, s.pg)
+	emailExists, err := userEmailExists(in.Email, s.pg)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "query email error")
 	} else if emailExists {
@@ -58,13 +54,13 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	}
 
 	// Hash password
-	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Pass), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "hash error")
 	}
 
 	// Create user struct
-	user := createUser(name, email, string(hash))
+	user := createUser(in.Name, in.Email, string(hash))
 
 	// Insert user
 	if err := insertUser(user, s.pg); err != nil {
@@ -78,9 +74,6 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 
 // SignIn allows users to sign in.
 func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.SignInResponse, error) {
-	email := in.GetEmail()
-	pass := in.GetPass()
-
 	// Input validation
 	err := validateSignInRequest(in)
 	if err != nil {
@@ -91,7 +84,7 @@ func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.Si
 
 	// Fetch user data
 	sql := "SELECT id, name, pass FROM users WHERE email = $1"
-	err = s.pg.QueryRow(context.Background(), sql, email).Scan(&user.ID, &user.Name, &user.Pass)
+	err = s.pg.QueryRow(context.Background(), sql, in.Email).Scan(&user.ID, &user.Name, &user.Pass)
 	if err == pgx.ErrNoRows {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	} else if err != nil {
@@ -99,7 +92,7 @@ func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.Si
 	}
 
 	// Compare request pass to the hashed pass
-	err = bcrypt.CompareHashAndPassword([]byte(user.Pass), []byte(pass))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Pass), []byte(in.Pass))
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 	}
@@ -110,7 +103,7 @@ func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.Si
 		return nil, status.Errorf(codes.Internal, "generate auth token error: %v", err)
 	}
 
-	log.Println("User has logged in", email)
+	log.Println("User has logged in", in.Email)
 
 	// Create sign in response
 	res := &proto.SignInResponse{
@@ -144,19 +137,20 @@ type SignUpValidator struct {
 	Pass  string `valid:"required,minstringlength(8),maxstringlength(255)"`
 }
 
-func validateSignUpRequest(req *proto.SignUpRequest) error {
-	name := govalidator.Trim(req.Name, "")
-	email := govalidator.Trim(req.Email, "")
-	name = strings.ToLower(name)
+// Sanitize and validate the sign up request.
+func validateSignUpRequest(req *proto.SignUpRequest) (err error) {
+	req.Name = govalidator.Trim(req.Name, "")
+	req.Email = govalidator.Trim(req.Email, "")
+	req.Name = strings.ToLower(req.Name)
 
-	email, err := govalidator.NormalizeEmail(email)
+	req.Email, err = govalidator.NormalizeEmail(req.Email)
 	if err != nil {
-		return err
+		return
 	}
 
-	v := SignUpValidator{Name: name, Email: email, Pass: req.Pass}
+	v := SignUpValidator{Name: req.Name, Email: req.Email, Pass: req.Pass}
 	_, err = govalidator.ValidateStruct(v)
-	return err
+	return
 }
 
 // SignInValidator is used to validate sign in requests.
@@ -165,15 +159,16 @@ type SignInValidator struct {
 	Pass  string `valid:"required,minstringlength(8),maxstringlength(255)"`
 }
 
-func validateSignInRequest(req *proto.SignInRequest) error {
-	email := govalidator.Trim(req.Email, "")
+// Sanitize and validate the sign in request.
+func validateSignInRequest(req *proto.SignInRequest) (err error) {
+	req.Email = govalidator.Trim(req.Email, "")
 
-	email, err := govalidator.NormalizeEmail(email)
+	req.Email, err = govalidator.NormalizeEmail(req.Email)
 	if err != nil {
-		return err
+		return
 	}
 
-	v := SignInValidator{Email: email, Pass: req.Pass}
+	v := SignInValidator{Email: req.Email, Pass: req.Pass}
 	_, err = govalidator.ValidateStruct(v)
-	return err
+	return
 }
