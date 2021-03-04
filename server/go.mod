@@ -3,6 +3,7 @@ module github.com/cdrpl/granny/server
 go 1.16
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/go-redis/redis/v8 v8.6.0
 	github.com/golang/protobuf v1.4.3
 	github.com/jackc/pgx/v4 v4.10.1

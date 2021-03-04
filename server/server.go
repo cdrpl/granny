@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"net"
+	"strings"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/cdrpl/granny/server/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4"
@@ -32,6 +34,11 @@ func (s *Server) SignUp(ctx context.Context, in *proto.SignUpRequest) (*proto.Si
 	name := in.GetName()
 	email := in.GetEmail()
 	pass := in.GetPass()
+
+	err := validateSignUpRequest(in)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 
 	// Name must be unique
 	nameExists, err := userNameExists(name, s.pg)
@@ -121,4 +128,26 @@ func (s *Server) run() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+// SignUpValidator is used to validate the sign up request.
+type SignUpValidator struct {
+	Name  string `valid:"required,maxstringlength(16)"`
+	Email string `valid:"required,maxstringlength(255)"`
+	Pass  string `valid:"required,minstringlength(8),maxstringlength(255)"`
+}
+
+func validateSignUpRequest(req *proto.SignUpRequest) error {
+	name := govalidator.Trim(req.Name, "")
+	email := govalidator.Trim(req.Email, "")
+	name = strings.ToLower(name)
+
+	email, err := govalidator.NormalizeEmail(email)
+	if err != nil {
+		return err
+	}
+
+	v := SignUpValidator{Name: name, Email: email, Pass: req.Pass}
+	_, err = govalidator.ValidateStruct(v)
+	return err
 }
