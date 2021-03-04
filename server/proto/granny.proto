@@ -6,6 +6,7 @@ package proto;
 
 service Auth {
   rpc SignUp (SignUpRequest) returns (SignUpResponse) {}
+  rpc SignIn (SignInRequest) returns (SignInResponse) {}
 }
 
 message SignUpRequest {
@@ -15,3 +16,14 @@ message SignUpRequest {
 }
 
 message SignUpResponse {}
+
+message SignInRequest {
+  string email = 1;
+  string pass = 2;
+}
+
+message SignInResponse {
+  int32 id = 1;
+  string token = 2;
+  string name = 3;
+}

@@ -36,3 +36,19 @@ func checkAuth(rdb *redis.Client, userID int64, token string) (bool, error) {
 	}
 	return result == token, nil
 }
+
+// createAuthToken will generate a random token and store it in Redis using the given id as the key.
+// Return value (token, err).
+func createAuthToken(id int64, rdb *redis.Client) (string, error) {
+	token, err := generateToken(tokenBytes)
+	if err != nil {
+		return token, errors.New("generateToken error: " + err.Error())
+	}
+
+	err = rdb.Set(context.Background(), fmt.Sprint(id), token, tokenExpire).Err()
+	if err != nil {
+		return token, errors.New("redis set ex error: " + err.Error())
+	}
+
+	return token, nil
+}

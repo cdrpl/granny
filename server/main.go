@@ -3,12 +3,15 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 )
 
 const (
-	port         = ":3000" // Port for the GRPC server
-	migrationDir = "./db"  // Directory that holds the SQL files
-	roomSize     = 5       // Max users in a room
+	port         = ":3000"            // Port for the GRPC server
+	migrationDir = "./db"             // Directory that holds the SQL files
+	roomSize     = 5                  // Max users in a room
+	tokenBytes   = 16                 // Num bytes in the auth token, num chars in the token will be tokenBytes * 2
+	tokenExpire  = time.Hour * 24 * 7 // Time till auth tokens expire
 )
 
 func main() {

@@ -14,6 +14,8 @@ namespace Proto {
 
     static readonly grpc::Marshaller<global::Proto.SignUpRequest> __Marshaller_proto_SignUpRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.SignUpRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::Proto.SignUpResponse> __Marshaller_proto_SignUpResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.SignUpResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.SignInRequest> __Marshaller_proto_SignInRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.SignInRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.SignInResponse> __Marshaller_proto_SignInResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.SignInResponse.Parser.ParseFrom);
 
     static readonly grpc::Method<global::Proto.SignUpRequest, global::Proto.SignUpResponse> __Method_SignUp = new grpc::Method<global::Proto.SignUpRequest, global::Proto.SignUpResponse>(
         grpc::MethodType.Unary,
@@ -21,6 +23,13 @@ namespace Proto {
         "SignUp",
         __Marshaller_proto_SignUpRequest,
         __Marshaller_proto_SignUpResponse);
+
+    static readonly grpc::Method<global::Proto.SignInRequest, global::Proto.SignInResponse> __Method_SignIn = new grpc::Method<global::Proto.SignInRequest, global::Proto.SignInResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "SignIn",
+        __Marshaller_proto_SignInRequest,
+        __Marshaller_proto_SignInResponse);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -33,6 +42,11 @@ namespace Proto {
     public abstract partial class AuthBase
     {
       public virtual global::System.Threading.Tasks.Task<global::Proto.SignUpResponse> SignUp(global::Proto.SignUpRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task<global::Proto.SignInResponse> SignIn(global::Proto.SignInRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -78,6 +92,22 @@ namespace Proto {
       {
         return CallInvoker.AsyncUnaryCall(__Method_SignUp, null, options, request);
       }
+      public virtual global::Proto.SignInResponse SignIn(global::Proto.SignInRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return SignIn(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual global::Proto.SignInResponse SignIn(global::Proto.SignInRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_SignIn, null, options, request);
+      }
+      public virtual grpc::AsyncUnaryCall<global::Proto.SignInResponse> SignInAsync(global::Proto.SignInRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return SignInAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncUnaryCall<global::Proto.SignInResponse> SignInAsync(global::Proto.SignInRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_SignIn, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       protected override AuthClient NewInstance(ClientBaseConfiguration configuration)
       {
@@ -90,7 +120,8 @@ namespace Proto {
     public static grpc::ServerServiceDefinition BindService(AuthBase serviceImpl)
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
-          .AddMethod(__Method_SignUp, serviceImpl.SignUp).Build();
+          .AddMethod(__Method_SignUp, serviceImpl.SignUp)
+          .AddMethod(__Method_SignIn, serviceImpl.SignIn).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the  service binding logic.
@@ -100,6 +131,7 @@ namespace Proto {
     public static void BindService(grpc::ServiceBinderBase serviceBinder, AuthBase serviceImpl)
     {
       serviceBinder.AddMethod(__Method_SignUp, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Proto.SignUpRequest, global::Proto.SignUpResponse>(serviceImpl.SignUp));
+      serviceBinder.AddMethod(__Method_SignIn, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Proto.SignInRequest, global::Proto.SignInResponse>(serviceImpl.SignIn));
     }
 
   }
