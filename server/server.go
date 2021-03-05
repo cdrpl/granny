@@ -23,6 +23,7 @@ type Server struct {
 	rdb  *redis.Client
 	room Room
 	proto.UnimplementedAuthServer
+	proto.UnimplementedRoomServer
 }
 
 // Create new GRPC server.
@@ -116,6 +117,19 @@ func (s *Server) SignIn(ctx context.Context, in *proto.SignInRequest) (*proto.Si
 	return res, nil
 }
 
+// GetRoom will return a map of users in the room.
+func (s *Server) GetRoom(ctx context.Context, in *proto.GetRoomRequest) (*proto.GetRoomResponse, error) {
+	res := &proto.GetRoomResponse{
+		Users: make(map[int32]*proto.User),
+	}
+
+	for _, user := range s.room.Users {
+		res.Users[int32(user.id)] = &proto.User{Id: int32(user.id), Name: user.name}
+	}
+
+	return res, nil
+}
+
 // Run the GRPC server.
 func (s *Server) run() {
 	lis, err := net.Listen("tcp", port)
@@ -125,6 +139,7 @@ func (s *Server) run() {
 
 	grpcServer := grpc.NewServer()
 	proto.RegisterAuthServer(grpcServer, s)
+	proto.RegisterRoomServer(grpcServer, s)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

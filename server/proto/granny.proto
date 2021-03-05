@@ -27,3 +27,18 @@ message SignInResponse {
   string token = 2;
   string name = 3;
 }
+
+service Room {
+  rpc GetRoom (GetRoomRequest) returns (GetRoomResponse) {}
+}
+
+message GetRoomRequest {}
+
+message GetRoomResponse {
+  map<int32, User> users = 1;
+}
+
+message User {
+  int32 id = 1;
+  string name = 2;
+}

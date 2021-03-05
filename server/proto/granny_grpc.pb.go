@@ -135,3 +135,89 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/granny.proto",
 }
+
+// RoomClient is the client API for Room service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type RoomClient interface {
+	GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*GetRoomResponse, error)
+}
+
+type roomClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewRoomClient(cc grpc.ClientConnInterface) RoomClient {
+	return &roomClient{cc}
+}
+
+func (c *roomClient) GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*GetRoomResponse, error) {
+	out := new(GetRoomResponse)
+	err := c.cc.Invoke(ctx, "/proto.Room/GetRoom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RoomServer is the server API for Room service.
+// All implementations must embed UnimplementedRoomServer
+// for forward compatibility
+type RoomServer interface {
+	GetRoom(context.Context, *GetRoomRequest) (*GetRoomResponse, error)
+	mustEmbedUnimplementedRoomServer()
+}
+
+// UnimplementedRoomServer must be embedded to have forward compatible implementations.
+type UnimplementedRoomServer struct {
+}
+
+func (UnimplementedRoomServer) GetRoom(context.Context, *GetRoomRequest) (*GetRoomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoom not implemented")
+}
+func (UnimplementedRoomServer) mustEmbedUnimplementedRoomServer() {}
+
+// UnsafeRoomServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RoomServer will
+// result in compilation errors.
+type UnsafeRoomServer interface {
+	mustEmbedUnimplementedRoomServer()
+}
+
+func RegisterRoomServer(s grpc.ServiceRegistrar, srv RoomServer) {
+	s.RegisterService(&Room_ServiceDesc, srv)
+}
+
+func _Room_GetRoom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RoomServer).GetRoom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Room/GetRoom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RoomServer).GetRoom(ctx, req.(*GetRoomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Room_ServiceDesc is the grpc.ServiceDesc for Room service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Room_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.Room",
+	HandlerType: (*RoomServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetRoom",
+			Handler:    _Room_GetRoom_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "proto/granny.proto",
+}
