@@ -19,14 +19,15 @@ import (
 
 // Server handles GRPC requests.
 type Server struct {
-	pg  *pgxpool.Pool
-	rdb *redis.Client
+	pg   *pgxpool.Pool
+	rdb  *redis.Client
+	room Room
 	proto.UnimplementedAuthServer
 }
 
 // Create new GRPC server.
 func createServer(pg *pgxpool.Pool, rdb *redis.Client) *Server {
-	return &Server{pg: pg, rdb: rdb}
+	return &Server{pg: pg, rdb: rdb, room: newRoom()}
 }
 
 // SignUp is used for new user registrations
