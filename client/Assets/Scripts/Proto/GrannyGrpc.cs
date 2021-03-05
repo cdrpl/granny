@@ -135,5 +135,100 @@ namespace Proto {
     }
 
   }
+  public static partial class Room
+  {
+    static readonly string __ServiceName = "proto.Room";
+
+    static readonly grpc::Marshaller<global::Proto.GetRoomRequest> __Marshaller_proto_GetRoomRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.GetRoomRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.GetRoomResponse> __Marshaller_proto_GetRoomResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.GetRoomResponse.Parser.ParseFrom);
+
+    static readonly grpc::Method<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse> __Method_GetRoom = new grpc::Method<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "GetRoom",
+        __Marshaller_proto_GetRoomRequest,
+        __Marshaller_proto_GetRoomResponse);
+
+    /// <summary>Service descriptor</summary>
+    public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
+    {
+      get { return global::Proto.GrannyReflection.Descriptor.Services[1]; }
+    }
+
+    /// <summary>Base class for server-side implementations of Room</summary>
+    [grpc::BindServiceMethod(typeof(Room), "BindService")]
+    public abstract partial class RoomBase
+    {
+      public virtual global::System.Threading.Tasks.Task<global::Proto.GetRoomResponse> GetRoom(global::Proto.GetRoomRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+    }
+
+    /// <summary>Client for Room</summary>
+    public partial class RoomClient : grpc::ClientBase<RoomClient>
+    {
+      /// <summary>Creates a new client for Room</summary>
+      /// <param name="channel">The channel to use to make remote calls.</param>
+      public RoomClient(grpc::ChannelBase channel) : base(channel)
+      {
+      }
+      /// <summary>Creates a new client for Room that uses a custom <c>CallInvoker</c>.</summary>
+      /// <param name="callInvoker">The callInvoker to use to make remote calls.</param>
+      public RoomClient(grpc::CallInvoker callInvoker) : base(callInvoker)
+      {
+      }
+      /// <summary>Protected parameterless constructor to allow creation of test doubles.</summary>
+      protected RoomClient() : base()
+      {
+      }
+      /// <summary>Protected constructor to allow creation of configured clients.</summary>
+      /// <param name="configuration">The client configuration.</param>
+      protected RoomClient(ClientBaseConfiguration configuration) : base(configuration)
+      {
+      }
+
+      public virtual global::Proto.GetRoomResponse GetRoom(global::Proto.GetRoomRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetRoom(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual global::Proto.GetRoomResponse GetRoom(global::Proto.GetRoomRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_GetRoom, null, options, request);
+      }
+      public virtual grpc::AsyncUnaryCall<global::Proto.GetRoomResponse> GetRoomAsync(global::Proto.GetRoomRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetRoomAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncUnaryCall<global::Proto.GetRoomResponse> GetRoomAsync(global::Proto.GetRoomRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_GetRoom, null, options, request);
+      }
+      /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
+      protected override RoomClient NewInstance(ClientBaseConfiguration configuration)
+      {
+        return new RoomClient(configuration);
+      }
+    }
+
+    /// <summary>Creates service definition that can be registered with a server</summary>
+    /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
+    public static grpc::ServerServiceDefinition BindService(RoomBase serviceImpl)
+    {
+      return grpc::ServerServiceDefinition.CreateBuilder()
+          .AddMethod(__Method_GetRoom, serviceImpl.GetRoom).Build();
+    }
+
+    /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the  service binding logic.
+    /// Note: this method is part of an experimental API that can change or be removed without any prior notice.</summary>
+    /// <param name="serviceBinder">Service methods will be bound by calling <c>AddMethod</c> on this object.</param>
+    /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
+    public static void BindService(grpc::ServiceBinderBase serviceBinder, RoomBase serviceImpl)
+    {
+      serviceBinder.AddMethod(__Method_GetRoom, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse>(serviceImpl.GetRoom));
+    }
+
+  }
 }
 #endregion

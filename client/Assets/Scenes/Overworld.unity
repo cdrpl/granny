@@ -934,6 +934,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1322363805}
   - component: {fileID: 1322363806}
+  - component: {fileID: 1322363807}
   m_Layer: 0
   m_Name: Auto Auth
   m_TagString: Untagged
@@ -968,6 +969,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   flashMessage: {fileID: 1066571978}
+--- !u!114 &1322363807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322363804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6265444c78e69eb4d8d95d433ce6e84d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1505507250
 MonoBehaviour:
   m_ObjectHideFlags: 0
