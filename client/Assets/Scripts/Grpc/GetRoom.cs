@@ -5,13 +5,11 @@ namespace Idlemon
 {
     public class GetRoom : MonoBehaviour
     {
-        Channel channel;
         Proto.Room.RoomClient client;
 
         void Awake()
         {
-            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
-            client = new Proto.Room.RoomClient(channel);
+            client = new Proto.Room.RoomClient(Grpc.Channel);
         }
 
         async void Rpc()

@@ -14,13 +14,11 @@ namespace Idlemon.Ui
         public Button signInBtn;
         public FlashMessage flashMessage;
 
-        Channel channel;
         Proto.Auth.AuthClient client;
 
         void Awake()
         {
-            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
-            client = new Proto.Auth.AuthClient(channel);
+            client = new Proto.Auth.AuthClient(Grpc.Channel);
         }
 
         void Start()

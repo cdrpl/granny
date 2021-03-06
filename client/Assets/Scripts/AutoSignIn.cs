@@ -12,7 +12,6 @@ namespace Idlemon
     {
         public FlashMessage flashMessage;
 
-        Channel channel;
         Proto.Auth.AuthClient client;
 
         async void Awake()
@@ -22,8 +21,7 @@ namespace Idlemon
                 return;
             }
 
-            channel = new Channel(Const.SERVER_ADDR, ChannelCredentials.Insecure);
-            client = new Proto.Auth.AuthClient(channel);
+            client = new Proto.Auth.AuthClient(Grpc.Channel);
 
             try
             {
