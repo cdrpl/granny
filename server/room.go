@@ -8,12 +8,12 @@ import (
 
 // Room represents a game room.
 type Room struct {
-	Users map[int64]*RoomUser
+	Users map[int]*RoomUser
 }
 
 func newRoom() Room {
 	return Room{
-		Users: make(map[int64]*RoomUser),
+		Users: make(map[int]*RoomUser),
 	}
 }
 
@@ -44,19 +44,19 @@ func (r *Room) run() {
 
 // RoomUser describes a user in a room.
 type RoomUser struct {
-	id     int64
+	id     int
 	name   string
-	joined chan int64 // Channel receives user id when a user joins
-	leave  chan int64
+	joined chan int // Channel receives user id when a user joins
+	leave  chan int
 	cancel context.CancelFunc
 }
 
-func newRoomUser(id int64, name string) *RoomUser {
+func newRoomUser(id int, name string) *RoomUser {
 	return &RoomUser{
 		id:     id,
 		name:   name,
-		joined: make(chan int64),
-		leave:  make(chan int64),
+		joined: make(chan int),
+		leave:  make(chan int),
 	}
 }
 

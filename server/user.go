@@ -4,7 +4,7 @@ import "time"
 
 // User account data.
 type User struct {
-	ID        int64  `json:"id"`
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	Email     string
 	Pass      string
