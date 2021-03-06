@@ -137,7 +137,10 @@ func (s *Server) run() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	uInterceptor := UnaryInterceptor{rdb: s.rdb}
+
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(uInterceptor.auth))
+
 	proto.RegisterAuthServer(grpcServer, s)
 	proto.RegisterRoomServer(grpcServer, s)
 
