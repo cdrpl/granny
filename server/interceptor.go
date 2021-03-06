@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc"
@@ -26,14 +28,29 @@ func (u *UnaryInterceptor) auth(ctx context.Context, req interface{}, info *grpc
 		return nil, status.Error(codes.Unauthenticated, "no metadata in request")
 	}
 
-	id := md.Get("user-id")
-	if id == nil || len(id) == 0 {
+	ids := md.Get("user-id")
+	if ids == nil || len(ids) == 0 {
 		return nil, status.Error(codes.Unauthenticated, "user-id metadata required")
 	}
 
-	token := md.Get("token")
-	if token == nil || len(token) == 0 {
+	// id must be an int
+	id, err := strconv.Atoi(ids[0])
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "user-id is not a valid number")
+	}
+
+	tokens := md.Get("token")
+	if tokens == nil || len(tokens) == 0 {
 		return nil, status.Error(codes.Unauthenticated, "token metadata required")
+	}
+
+	// Verify auth token
+	isValid, err := checkAuth(u.rdb, id, tokens[0])
+	if err != nil {
+		log.Println("unary interceptor auth error:", err.Error())
+		return nil, status.Error(codes.Internal, "an error has occured")
+	} else if !isValid {
+		return nil, status.Error(codes.Unauthenticated, "unauthorized")
 	}
 
 	return handler(ctx, req)
