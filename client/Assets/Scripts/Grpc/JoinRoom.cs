@@ -21,10 +21,16 @@ namespace Idlemon
             try
             {
                 LoadingPanel.instance.Show();
-                await client.JoinRoomAsync(new Proto.JoinRoomReq { }, Grpc.Metadata, Grpc.Deadline);
-                Debug.Log("Room joined");
+                await client.JoinRoomAsync(new Proto.JoinRoomReq(), Grpc.Metadata, Grpc.Deadline);
+                Debug.Log("Joined room");
 
-                // Setup room streams
+                // Setup the join room stream
+                using var stream = client.UserJoined(new Proto.UserJoinedReq());
+                while (await stream.ResponseStream.MoveNext())
+                {
+                    Debug.Log(stream.ResponseStream.Current.Id);
+                }
+                Debug.Log("Stream ended");
             }
             catch (RpcException e)
             {

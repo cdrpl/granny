@@ -99,7 +99,7 @@ namespace Idlemon.Ui
             try
             {
                 LoadingPanel.instance.Show();
-                await client.SignUpAsync(new Proto.SignUpRequest { Email = email.text, Name = username.text, Pass = password.text }, null, Grpc.Deadline);
+                await client.SignUpAsync(new Proto.SignUpRequest() { Email = email.text, Name = username.text, Pass = password.text }, null, Grpc.Deadline);
                 flashMessage.Flash("Sign up successful");
                 ClearInputs();
                 OnSignUpSuccess.Invoke();

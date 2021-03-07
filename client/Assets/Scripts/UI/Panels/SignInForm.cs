@@ -75,7 +75,7 @@ namespace Idlemon.Ui
 
             try
             {
-                var response = await client.SignInAsync(new Proto.SignInRequest { Email = email.text, Pass = password.text }, null, Grpc.Deadline);
+                var response = await client.SignInAsync(new Proto.SignInRequest() { Email = email.text, Pass = password.text }, null, Grpc.Deadline);
                 Global.User = new User(response);
                 Auth.UpdatePlayerPrefs(email.text, password.text, rememberMe.isOn);
                 SceneManager.LoadScene("Overworld");
