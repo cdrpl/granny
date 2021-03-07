@@ -5,7 +5,7 @@ This is the game client, it communicates with the server through gRPCs.
 ## Dependencies
 
 - [Server](/server)
-- [Unity](https://unity.com/) (2020.2.6f1)
+- [Unity](https://unity.com/) (2020.2.7f1)
 
 ## Constants
 
