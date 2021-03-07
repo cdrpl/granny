@@ -91,6 +91,18 @@ func dbUp(pg *pgxpool.Pool) error {
 	return nil
 }
 
+func findUser(id int, pg *pgxpool.Pool) (User, error) {
+	user := User{ID: id}
+
+	sql := "SELECT name FROM users WHERE id = $1"
+	err := pg.QueryRow(context.Background(), sql, id).Scan(&user.Name)
+	if err != nil {
+		return user, fmt.Errorf("find user query row error: %v", err)
+	}
+
+	return user, nil
+}
+
 func userNameExists(name string, pg *pgxpool.Pool) (bool, error) {
 	var id int
 

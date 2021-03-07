@@ -1,78 +1,58 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"fmt"
+	"sync"
 )
 
 // Room represents a game room.
 type Room struct {
-	Users map[int]*RoomUser
+	users map[int]*RoomUser
+	mut   sync.Mutex
 }
 
 func newRoom() Room {
 	return Room{
-		Users: make(map[int]*RoomUser),
+		users: make(map[int]*RoomUser),
 	}
 }
 
+// Check if room is full, mut must be locked first.
 func (r *Room) isFull() bool {
-	return len(r.Users) >= roomSize
+	return len(r.users) >= roomSize
 }
 
 func (r *Room) joinRoom(user *RoomUser) error {
+	r.mut.Lock()
+	defer r.mut.Unlock()
+
 	roomIsFull := r.isFull()
 	if roomIsFull {
 		return errors.New("Room is full")
 	}
 
-	if _, ok := r.Users[user.id]; ok {
+	if _, ok := r.users[user.id]; ok {
 		return errors.New("User is already in the room")
 	}
 
-	r.Users[user.id] = user
+	r.users[user.id] = user
 
 	return nil
-}
-
-func (r *Room) run() {
-	for {
-		select {}
-	}
 }
 
 // RoomUser describes a user in a room.
 type RoomUser struct {
 	id     int
 	name   string
-	joined chan int // Channel receives user id when a user joins
+	joined chan *RoomUser // Channel receives user id when a user joins
 	leave  chan int
-	cancel context.CancelFunc
 }
 
 func newRoomUser(id int, name string) *RoomUser {
 	return &RoomUser{
 		id:     id,
 		name:   name,
-		joined: make(chan int),
+		joined: make(chan *RoomUser),
 		leave:  make(chan int),
-	}
-}
-
-func (r *RoomUser) run() {
-	ctx, cancel := context.WithCancel(context.Background())
-	r.cancel = cancel
-
-	select {
-	case id := <-r.joined:
-		fmt.Println("joined", id)
-
-	case id := <-r.leave:
-		fmt.Println("leave", id)
-
-	case <-ctx.Done():
-		fmt.Println("room user closed", r.id)
-		return
 	}
 }

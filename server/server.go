@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/cdrpl/granny/server/proto"
@@ -123,11 +124,41 @@ func (s *Server) GetRoom(ctx context.Context, in *proto.GetRoomRequest) (*proto.
 		Users: make(map[int32]*proto.User),
 	}
 
-	for _, user := range s.room.Users {
+	for _, user := range s.room.users {
 		res.Users[int32(user.id)] = &proto.User{Id: int32(user.id), Name: user.name}
 	}
 
 	return res, nil
+}
+
+// JoinRoom will allow a user to join a room.
+func (s *Server) JoinRoom(ctx context.Context, in *proto.JoinRoomReq) (*proto.JoinRoomRes, error) {
+	id, _, _ := extractUserIDAndToken(ctx)
+
+	user, err := findUser(id, s.pg)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "join room error: %v", err)
+	}
+
+	ru := newRoomUser(id, user.Name)
+
+	err = s.room.joinRoom(ru)
+	if err != nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "join room error: %v", err)
+	}
+
+	return &proto.JoinRoomRes{}, nil
+}
+
+// UserJoined streams a user whenever a user joins the room.
+func (s *Server) UserJoined(req *proto.UserJoinedReq, stream proto.Room_UserJoinedServer) error {
+
+	for i := 0; i < 10; i++ {
+		time.Sleep(time.Second)
+		stream.Send(&proto.User{Id: int32(i)})
+	}
+
+	return nil
 }
 
 // Run the GRPC server.

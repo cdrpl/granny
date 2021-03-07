@@ -142,6 +142,7 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 type RoomClient interface {
 	GetRoom(ctx context.Context, in *GetRoomRequest, opts ...grpc.CallOption) (*GetRoomResponse, error)
 	JoinRoom(ctx context.Context, in *JoinRoomReq, opts ...grpc.CallOption) (*JoinRoomRes, error)
+	UserJoined(ctx context.Context, in *UserJoinedReq, opts ...grpc.CallOption) (Room_UserJoinedClient, error)
 }
 
 type roomClient struct {
@@ -170,12 +171,45 @@ func (c *roomClient) JoinRoom(ctx context.Context, in *JoinRoomReq, opts ...grpc
 	return out, nil
 }
 
+func (c *roomClient) UserJoined(ctx context.Context, in *UserJoinedReq, opts ...grpc.CallOption) (Room_UserJoinedClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Room_ServiceDesc.Streams[0], "/proto.Room/UserJoined", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &roomUserJoinedClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Room_UserJoinedClient interface {
+	Recv() (*User, error)
+	grpc.ClientStream
+}
+
+type roomUserJoinedClient struct {
+	grpc.ClientStream
+}
+
+func (x *roomUserJoinedClient) Recv() (*User, error) {
+	m := new(User)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RoomServer is the server API for Room service.
 // All implementations must embed UnimplementedRoomServer
 // for forward compatibility
 type RoomServer interface {
 	GetRoom(context.Context, *GetRoomRequest) (*GetRoomResponse, error)
 	JoinRoom(context.Context, *JoinRoomReq) (*JoinRoomRes, error)
+	UserJoined(*UserJoinedReq, Room_UserJoinedServer) error
 	mustEmbedUnimplementedRoomServer()
 }
 
@@ -188,6 +222,9 @@ func (UnimplementedRoomServer) GetRoom(context.Context, *GetRoomRequest) (*GetRo
 }
 func (UnimplementedRoomServer) JoinRoom(context.Context, *JoinRoomReq) (*JoinRoomRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinRoom not implemented")
+}
+func (UnimplementedRoomServer) UserJoined(*UserJoinedReq, Room_UserJoinedServer) error {
+	return status.Errorf(codes.Unimplemented, "method UserJoined not implemented")
 }
 func (UnimplementedRoomServer) mustEmbedUnimplementedRoomServer() {}
 
@@ -238,6 +275,27 @@ func _Room_JoinRoom_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Room_UserJoined_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(UserJoinedReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RoomServer).UserJoined(m, &roomUserJoinedServer{stream})
+}
+
+type Room_UserJoinedServer interface {
+	Send(*User) error
+	grpc.ServerStream
+}
+
+type roomUserJoinedServer struct {
+	grpc.ServerStream
+}
+
+func (x *roomUserJoinedServer) Send(m *User) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Room_ServiceDesc is the grpc.ServiceDesc for Room service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -254,6 +312,12 @@ var Room_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Room_JoinRoom_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "UserJoined",
+			Handler:       _Room_UserJoined_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/granny.proto",
 }
