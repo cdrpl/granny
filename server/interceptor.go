@@ -3,12 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -23,31 +21,15 @@ func (u *UnaryInterceptor) auth(ctx context.Context, req interface{}, info *grpc
 		return handler(ctx, req)
 	}
 
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "no metadata in request")
-	}
-
-	ids := md.Get("user-id")
-	if ids == nil || len(ids) == 0 {
-		return nil, status.Error(codes.Unauthenticated, "user-id metadata required")
-	}
-
-	// id must be an int
-	id, err := strconv.Atoi(ids[0])
+	id, token, err := extractUserIDAndToken(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unauthenticated, "user-id is not a valid number")
-	}
-
-	tokens := md.Get("token")
-	if tokens == nil || len(tokens) == 0 {
-		return nil, status.Error(codes.Unauthenticated, "token metadata required")
+		return nil, status.Error(codes.Internal, "unauthorized")
 	}
 
 	// Verify auth token
-	isValid, err := checkAuth(u.rdb, id, tokens[0])
+	isValid, err := checkAuth(u.rdb, id, token)
 	if err != nil {
-		log.Println("unary interceptor auth error:", err.Error())
+		log.Printf("unary interceptor auth error: %v\n", err)
 		return nil, status.Error(codes.Internal, "an error has occured")
 	} else if !isValid {
 		return nil, status.Error(codes.Unauthenticated, "unauthorized")

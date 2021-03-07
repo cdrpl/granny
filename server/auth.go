@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
+	"google.golang.org/grpc/metadata"
 )
 
 // checkAuth will return true if the user is authorized and false if not.
@@ -35,4 +37,31 @@ func createAuthToken(id int, rdb *redis.Client) (string, error) {
 	}
 
 	return token, nil
+}
+
+// extract user ID and auth token from the gRPC context.
+func extractUserIDAndToken(ctx context.Context) (id int, token string, err error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return id, token, errors.New("extract user id error: no metadata")
+	}
+
+	ids := md.Get("user-id")
+	if ids == nil || len(ids) == 0 {
+		return id, token, errors.New("user-id metadata required")
+	}
+
+	// Convert string id to int
+	id, err = strconv.Atoi(ids[0])
+	if err != nil {
+		return id, token, errors.New("user-id is not a valid number")
+	}
+
+	tokens := md.Get("token")
+	if tokens == nil || len(tokens) == 0 {
+		return id, token, errors.New("token metadata required")
+	}
+
+	token = tokens[0]
+	return
 }
