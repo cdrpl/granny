@@ -143,6 +143,8 @@ namespace Proto {
     static readonly grpc::Marshaller<global::Proto.GetRoomResponse> __Marshaller_proto_GetRoomResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.GetRoomResponse.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::Proto.JoinRoomReq> __Marshaller_proto_JoinRoomReq = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.JoinRoomReq.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::Proto.JoinRoomRes> __Marshaller_proto_JoinRoomRes = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.JoinRoomRes.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.UserJoinedReq> __Marshaller_proto_UserJoinedReq = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.UserJoinedReq.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Proto.User> __Marshaller_proto_User = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Proto.User.Parser.ParseFrom);
 
     static readonly grpc::Method<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse> __Method_GetRoom = new grpc::Method<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse>(
         grpc::MethodType.Unary,
@@ -157,6 +159,13 @@ namespace Proto {
         "JoinRoom",
         __Marshaller_proto_JoinRoomReq,
         __Marshaller_proto_JoinRoomRes);
+
+    static readonly grpc::Method<global::Proto.UserJoinedReq, global::Proto.User> __Method_UserJoined = new grpc::Method<global::Proto.UserJoinedReq, global::Proto.User>(
+        grpc::MethodType.ServerStreaming,
+        __ServiceName,
+        "UserJoined",
+        __Marshaller_proto_UserJoinedReq,
+        __Marshaller_proto_User);
 
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
@@ -174,6 +183,11 @@ namespace Proto {
       }
 
       public virtual global::System.Threading.Tasks.Task<global::Proto.JoinRoomRes> JoinRoom(global::Proto.JoinRoomReq request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task UserJoined(global::Proto.UserJoinedReq request, grpc::IServerStreamWriter<global::Proto.User> responseStream, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -235,6 +249,14 @@ namespace Proto {
       {
         return CallInvoker.AsyncUnaryCall(__Method_JoinRoom, null, options, request);
       }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.User> UserJoined(global::Proto.UserJoinedReq request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return UserJoined(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncServerStreamingCall<global::Proto.User> UserJoined(global::Proto.UserJoinedReq request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncServerStreamingCall(__Method_UserJoined, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       protected override RoomClient NewInstance(ClientBaseConfiguration configuration)
       {
@@ -248,7 +270,8 @@ namespace Proto {
     {
       return grpc::ServerServiceDefinition.CreateBuilder()
           .AddMethod(__Method_GetRoom, serviceImpl.GetRoom)
-          .AddMethod(__Method_JoinRoom, serviceImpl.JoinRoom).Build();
+          .AddMethod(__Method_JoinRoom, serviceImpl.JoinRoom)
+          .AddMethod(__Method_UserJoined, serviceImpl.UserJoined).Build();
     }
 
     /// <summary>Register service method with a service binder with or without implementation. Useful when customizing the  service binding logic.
@@ -259,6 +282,7 @@ namespace Proto {
     {
       serviceBinder.AddMethod(__Method_GetRoom, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Proto.GetRoomRequest, global::Proto.GetRoomResponse>(serviceImpl.GetRoom));
       serviceBinder.AddMethod(__Method_JoinRoom, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Proto.JoinRoomReq, global::Proto.JoinRoomRes>(serviceImpl.JoinRoom));
+      serviceBinder.AddMethod(__Method_UserJoined, serviceImpl == null ? null : new grpc::ServerStreamingServerMethod<global::Proto.UserJoinedReq, global::Proto.User>(serviceImpl.UserJoined));
     }
 
   }

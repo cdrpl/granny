@@ -26,7 +26,9 @@ namespace Idlemon
             try
             {
                 LoadingPanel.instance.Show();
-                var response = await client.SignInAsync(new Proto.SignInRequest { Email = Auth.SavedEmail, Pass = Auth.SavedPassword });
+
+                var req = new Proto.SignInRequest { Email = Auth.SavedEmail, Pass = Auth.SavedPassword };
+                var response = await client.SignInAsync(req, null, Grpc.Deadline);
                 Global.User = new User(response);
                 Debug.Log("User logged in: " + Auth.SavedEmail);
             }

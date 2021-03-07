@@ -33,13 +33,15 @@ namespace Proto {
             "b21SZXNwb25zZS5Vc2Vyc0VudHJ5GjkKClVzZXJzRW50cnkSCwoDa2V5GAEg",
             "ASgFEhoKBXZhbHVlGAIgASgLMgsucHJvdG8uVXNlcjoCOAEiIAoEVXNlchIK",
             "CgJpZBgBIAEoBRIMCgRuYW1lGAIgASgJIhkKC0pvaW5Sb29tUmVxEgoKAmlk",
-            "GAEgASgJIg0KC0pvaW5Sb29tUmVzMngKBEF1dGgSNwoGU2lnblVwEhQucHJv",
-            "dG8uU2lnblVwUmVxdWVzdBoVLnByb3RvLlNpZ25VcFJlc3BvbnNlIgASNwoG",
-            "U2lnbkluEhQucHJvdG8uU2lnbkluUmVxdWVzdBoVLnByb3RvLlNpZ25JblJl",
-            "c3BvbnNlIgAyeAoEUm9vbRI6CgdHZXRSb29tEhUucHJvdG8uR2V0Um9vbVJl",
-            "cXVlc3QaFi5wcm90by5HZXRSb29tUmVzcG9uc2UiABI0CghKb2luUm9vbRIS",
-            "LnByb3RvLkpvaW5Sb29tUmVxGhIucHJvdG8uSm9pblJvb21SZXMiAEImWiRn",
-            "aXRodWIuY29tL2NkcnBsL2dyYW5ueS9zZXJ2ZXIvcHJvdG9iBnByb3RvMw=="));
+            "GAEgASgJIg0KC0pvaW5Sb29tUmVzIg8KDVVzZXJKb2luZWRSZXEyeAoEQXV0",
+            "aBI3CgZTaWduVXASFC5wcm90by5TaWduVXBSZXF1ZXN0GhUucHJvdG8uU2ln",
+            "blVwUmVzcG9uc2UiABI3CgZTaWduSW4SFC5wcm90by5TaWduSW5SZXF1ZXN0",
+            "GhUucHJvdG8uU2lnbkluUmVzcG9uc2UiADKtAQoEUm9vbRI6CgdHZXRSb29t",
+            "EhUucHJvdG8uR2V0Um9vbVJlcXVlc3QaFi5wcm90by5HZXRSb29tUmVzcG9u",
+            "c2UiABI0CghKb2luUm9vbRISLnByb3RvLkpvaW5Sb29tUmVxGhIucHJvdG8u",
+            "Sm9pblJvb21SZXMiABIzCgpVc2VySm9pbmVkEhQucHJvdG8uVXNlckpvaW5l",
+            "ZFJlcRoLLnByb3RvLlVzZXIiADABQiZaJGdpdGh1Yi5jb20vY2RycGwvZ3Jh",
+            "bm55L3NlcnZlci9wcm90b2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -51,7 +53,8 @@ namespace Proto {
             new pbr::GeneratedClrTypeInfo(typeof(global::Proto.GetRoomResponse), global::Proto.GetRoomResponse.Parser, new[]{ "Users" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Proto.User), global::Proto.User.Parser, new[]{ "Id", "Name" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Proto.JoinRoomReq), global::Proto.JoinRoomReq.Parser, new[]{ "Id" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.JoinRoomRes), global::Proto.JoinRoomRes.Parser, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.JoinRoomRes), global::Proto.JoinRoomRes.Parser, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Proto.UserJoinedReq), global::Proto.UserJoinedReq.Parser, null, null, null, null)
           }));
     }
     #endregion
@@ -1275,6 +1278,107 @@ namespace Proto {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void MergeFrom(JoinRoomRes other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    }
+
+  }
+
+  public sealed partial class UserJoinedReq : pb::IMessage<UserJoinedReq> {
+    private static readonly pb::MessageParser<UserJoinedReq> _parser = new pb::MessageParser<UserJoinedReq>(() => new UserJoinedReq());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<UserJoinedReq> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Proto.GrannyReflection.Descriptor.MessageTypes[9]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public UserJoinedReq() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public UserJoinedReq(UserJoinedReq other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public UserJoinedReq Clone() {
+      return new UserJoinedReq(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as UserJoinedReq);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(UserJoinedReq other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(UserJoinedReq other) {
       if (other == null) {
         return;
       }
