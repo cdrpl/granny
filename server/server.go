@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/cdrpl/granny/server/proto"
@@ -152,13 +151,21 @@ func (s *Server) JoinRoom(ctx context.Context, in *proto.JoinRoomReq) (*proto.Jo
 
 // UserJoined streams a user whenever a user joins the room.
 func (s *Server) UserJoined(req *proto.UserJoinedReq, stream proto.Room_UserJoinedServer) error {
+	id, _, _ := extractUserIDAndToken(stream.Context())
 
-	for i := 0; i < 10; i++ {
-		time.Sleep(time.Second)
-		stream.Send(&proto.User{Id: int32(i)})
+	ru := s.room.getUser(id)
+
+	for {
+		select {
+		case joined := <-ru.joined:
+			stream.Send(&proto.User{Id: int32(joined.id), Name: joined.name})
+			break
+
+		case <-stream.Context().Done():
+			log.Println("Stream ended")
+			return nil
+		}
 	}
-
-	return nil
 }
 
 // Run the GRPC server.
@@ -169,8 +176,12 @@ func (s *Server) run() {
 	}
 
 	uInterceptor := UnaryInterceptor{rdb: s.rdb}
+	sInterceptor := StreamInterceptor{rdb: s.rdb}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(uInterceptor.auth))
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(uInterceptor.auth),
+		grpc.StreamInterceptor(sInterceptor.auth),
+	)
 
 	proto.RegisterAuthServer(grpcServer, s)
 	proto.RegisterRoomServer(grpcServer, s)

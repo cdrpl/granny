@@ -37,6 +37,22 @@ func (r *Room) joinRoom(user *RoomUser) error {
 
 	r.users[user.id] = user
 
+	// Broadcast user joined to every other user
+	for _, ru := range r.users {
+		ru.joined <- user
+	}
+
+	return nil
+}
+
+func (r *Room) getUser(id int) *RoomUser {
+	r.mut.Lock()
+	defer r.mut.Unlock()
+
+	if user, ok := r.users[id]; ok {
+		return user
+	}
+
 	return nil
 }
 
