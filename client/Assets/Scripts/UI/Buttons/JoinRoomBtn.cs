@@ -21,7 +21,14 @@ namespace Idlemon.Ui
 
         async void OnBtnPress()
         {
-            await joinRoom.Join();
+            bool joined = await joinRoom.Join();
+
+            if (joined)
+            {
+                var userJoined = new UserJoined();
+                await userJoined.Stream();
+                Debug.Log("end");
+            }
         }
     }
 }
